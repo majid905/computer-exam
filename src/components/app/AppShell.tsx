@@ -33,7 +33,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [state] = useUserState();
 
-  const hideNav = pathname?.startsWith("/onboarding") || pathname?.startsWith("/mock-exam/take");
+  const hideNav =
+    pathname?.startsWith("/onboarding") ||
+    pathname?.startsWith("/mock-exam/take") ||
+    pathname?.startsWith("/welcome");
 
   return (
     <div className="flex flex-col min-h-screen">
