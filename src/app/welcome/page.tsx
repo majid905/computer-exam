@@ -64,7 +64,7 @@ function MarketingNav() {
         </nav>
         <div className="flex items-center gap-2">
           <Link
-            href="/"
+            href="/app"
             className="hidden sm:inline-flex ud-btn ud-btn-ghost ud-btn-sm"
           >
             Sign in
@@ -624,7 +624,7 @@ function FinalCTA() {
             Start studying — it&apos;s free
           </Link>
           <Link
-            href="/"
+            href="/app"
             className="ud-btn ud-btn-ghost"
             style={{ background: "rgba(255,255,255,0.10)", color: "#fff", borderColor: "rgba(255,255,255,0.30)" }}
           >
@@ -661,7 +661,7 @@ function MarketingFooter() {
               { label: "Features", href: "#features" },
               { label: "How it works", href: "#how-it-works" },
               { label: "Pricing", href: "#pricing" },
-              { label: "Open the app", href: "/" },
+              { label: "Open the app", href: "/app" },
             ]}
           />
           <FooterCol

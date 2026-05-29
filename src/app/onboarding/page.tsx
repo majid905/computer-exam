@@ -105,7 +105,7 @@ export default function OnboardingPage() {
         },
       };
     });
-    router.replace("/");
+    router.replace("/app");
   }
 
   return (

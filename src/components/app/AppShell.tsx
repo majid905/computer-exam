@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useUserState } from "@/lib/storage";
 
 const NAV = [
-  { href: "/", label: "Home" },
+  { href: "/app", label: "Home" },
   { href: "/study", label: "Study" },
   { href: "/practice", label: "Practice" },
   { href: "/mock-exam", label: "Mock exam" },
@@ -34,6 +34,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [state] = useUserState();
 
   const hideNav =
+    pathname === "/" ||
+    pathname === "" ||
     pathname?.startsWith("/onboarding") ||
     pathname?.startsWith("/mock-exam/take") ||
     pathname?.startsWith("/welcome");
@@ -43,7 +45,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {!hideNav && (
         <header className="sticky top-0 z-30 backdrop-blur bg-[var(--color-surface)]/85 border-b">
           <div className="mx-auto max-w-6xl px-5 h-14 flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-2">
+            <Link href="/app" className="flex items-center gap-2">
               <PasspilotMark size={26} />
               <div className="leading-none">
                 <div className="font-extrabold tracking-tight text-[var(--color-ink)] text-[17px]">
