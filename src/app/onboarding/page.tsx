@@ -113,7 +113,8 @@ export default function OnboardingPage() {
       <header className="border-b">
         <div className="mx-auto max-w-3xl px-5 h-14 flex items-center justify-between">
           <p className="font-extrabold tracking-tight text-[var(--color-ink)]">
-            PassCanada — Setup
+            pass<span className="text-[var(--color-accent)]">p</span>ilot
+            <span className="text-[var(--color-muted)] font-bold"> — Setup</span>
           </p>
           <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-muted)]">
             Step {stepIndex + 1} of {STEPS.length}

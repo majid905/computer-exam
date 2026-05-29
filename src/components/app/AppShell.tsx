@@ -12,19 +12,19 @@ const NAV = [
   { href: "/progress", label: "Progress" },
 ];
 
-function MapleMark() {
+function PasspilotMark({ size = 28 }: { size?: number }) {
   return (
     <svg
-      width="22"
-      height="22"
-      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      viewBox="0 0 32 32"
       fill="none"
       aria-hidden
     >
-      <path
-        d="M12 2l1.6 4.2 4.4-.8-2.3 3.8 3.3 2.9-4.2 1.4 1 4.4-3.8-2.4L12 20l-.0-4.5-3.8 2.4 1-4.4L5 12.1l3.3-2.9L6 5.4l4.4.8L12 2z"
-        fill="var(--color-brand)"
-      />
+      <rect width="32" height="32" rx="7" fill="var(--color-brand)" />
+      {/* Paper-plane: light orange body + darker orange underside */}
+      <path d="M8 17.5 L23 9 L17.5 22.5 L14.5 17 Z" fill="#ffb265" />
+      <path d="M14.5 17 L23 9 L17.5 22.5 Z" fill="var(--color-accent)" />
     </svg>
   );
 }
@@ -41,10 +41,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <header className="sticky top-0 z-30 backdrop-blur bg-[var(--color-surface)]/85 border-b">
           <div className="mx-auto max-w-6xl px-5 h-14 flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
-              <MapleMark />
-              <span className="font-extrabold tracking-tight text-[var(--color-ink)]">
-                PassCanada
-              </span>
+              <PasspilotMark size={26} />
+              <div className="leading-none">
+                <div className="font-extrabold tracking-tight text-[var(--color-ink)] text-[17px]">
+                  pass<span className="text-[var(--color-accent)]">p</span>ilot
+                </div>
+                <div className="text-[10px] font-semibold text-[var(--color-muted)] tracking-wide mt-0.5 hidden sm:block">
+                  ai-powered exam coach
+                </div>
+              </div>
             </Link>
             <nav className="hidden md:flex items-center gap-1">
               {NAV.map((item) => {

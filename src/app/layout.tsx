@@ -10,9 +10,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "PassCanada — Citizenship Test Prep",
+  title: "passpilot — AI-powered exam coach",
   description:
-    "Study, practice, and simulate the Canadian citizenship knowledge test based on Discover Canada.",
+    "Study, practice, and simulate the Canadian citizenship knowledge test with AI-powered coaching.",
 };
 
 const themeInitScript = `
