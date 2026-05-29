@@ -22,7 +22,7 @@ export default function Home() {
   useEffect(() => {
     if (!hydrated) return;
     if (!state.onboarding.completed) {
-      router.replace("/onboarding");
+      router.replace("/welcome");
     }
   }, [hydrated, state.onboarding.completed, router]);
 
