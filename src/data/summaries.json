@@ -1,0 +1,482 @@
+{
+  "applying": {
+    "intro": "The basics of applying for and earning Canadian citizenship.",
+    "sections": [
+      {
+        "heading": "The citizenship test",
+        "points": [
+          "Usually a written test, but it can be an interview.",
+          "Tests two things: knowledge of Canada and adequate knowledge of English or French.",
+          "Adults aged 18–54 must pass; applicants 55 and over do not have to write the test.",
+          "All questions are based on this guide — every fact you need is in Discover Canada."
+        ]
+      },
+      {
+        "heading": "Getting ready",
+        "points": [
+          "Study this guide, practise with a friend or family member, and use citizenship classes if available.",
+          "Free English/French language classes are offered by the Government of Canada.",
+          "Keep the Call Centre updated with your correct address during processing."
+        ]
+      },
+      {
+        "heading": "The ceremony",
+        "points": [
+          "If you pass and meet all other requirements, you receive a Notice to Appear to Take the Oath of Citizenship.",
+          "At the ceremony you take the Oath of Citizenship, sign the oath form, and receive your Canadian Citizenship Certificate.",
+          "Family and friends are encouraged to attend."
+        ]
+      }
+    ]
+  },
+
+  "rights": {
+    "intro": "Where Canadian rights come from, what the Charter guarantees, and the responsibilities that come with citizenship.",
+    "sections": [
+      {
+        "heading": "Where our rights come from",
+        "points": [
+          "Magna Carta (1215, 'the Great Charter of Freedoms') — the historical root of Canadian rights.",
+          "English common law and the French civil code shape Canadian law.",
+          "Anglo-Saxon Christian and Hebrew religious traditions influenced our values.",
+          "Habeas corpus — the right to challenge unlawful detention — comes from English common law."
+        ]
+      },
+      {
+        "heading": "The Canadian Charter of Rights and Freedoms (1982)",
+        "points": [
+          "Part of the Constitution Act, 1982, signed by Queen Elizabeth II.",
+          "Recognizes Aboriginal and treaty rights of First Nations, Inuit and Métis peoples.",
+          "Four fundamental freedoms: (1) conscience and religion; (2) thought, belief, opinion and expression including press; (3) peaceful assembly; (4) association.",
+          "Democratic rights: right to vote, and elections at least every five years (except in war or emergency).",
+          "Mobility rights: live and work anywhere in Canada, enter and leave the country, apply for a passport.",
+          "Legal rights, equality rights, official language rights, and minority-language education rights."
+        ]
+      },
+      {
+        "heading": "Responsibilities of citizenship",
+        "points": [
+          "Obey the law — no person or group is above the law.",
+          "Take responsibility for yourself and your family.",
+          "Serve on a jury when called.",
+          "Vote in elections.",
+          "Help others in the community.",
+          "Protect and enjoy our heritage and environment.",
+          "Defending Canada is not compulsory, but service in the Canadian Forces (regular or reserve) or police is a noble way to contribute."
+        ]
+      },
+      {
+        "heading": "Equality of women and men",
+        "points": [
+          "Men and women are equal under the law.",
+          "Canada's openness does not extend to barbaric cultural practices — spousal abuse, 'honour killings,' female genital mutilation, forced marriage or other gender-based violence are crimes."
+        ]
+      }
+    ]
+  },
+
+  "who": {
+    "intro": "Who Canadians are: the three founding peoples, languages, and the makeup of modern Canada.",
+    "sections": [
+      {
+        "heading": "Three founding peoples",
+        "points": [
+          "Aboriginal, French and British peoples are the three founding peoples of Canada.",
+          "Most Canadians today are descended from settlers, with newcomers added over centuries."
+        ]
+      },
+      {
+        "heading": "Aboriginal peoples",
+        "points": [
+          "Three groups: First Nations (Indians), Métis, and Inuit.",
+          "First Nations are about 65% of the Aboriginal population; about half live on reserve land.",
+          "Métis are a distinct people of mixed Aboriginal and European ancestry; majority live on the Prairies; they speak Michif.",
+          "Inuit, meaning 'the people' in Inuktitut, live in small Arctic communities across Nunavut, Northwest Territories, Northern Quebec and Labrador.",
+          "Indian Residential Schools (1800s–1980s) caused enduring harm; the Government of Canada apologized in 2008."
+        ]
+      },
+      {
+        "heading": "English- and French-speaking Canadians",
+        "points": [
+          "Canada's two official languages are English and French.",
+          "About 18 million Anglophones (first language English) and 7 million Francophones (first language French).",
+          "Most Francophones live in Quebec; about 1 million Francophones live outside Quebec, including Acadians and Franco-Ontarians.",
+          "Acadians are descendants of French colonists who began settling in the Maritimes in 1604.",
+          "Quebecers — most live in Quebec; the majority are French-speaking and Roman Catholic.",
+          "Allophones are residents whose first language learned is neither English nor French."
+        ]
+      },
+      {
+        "heading": "Diversity in Canada",
+        "points": [
+          "Canada is home to many cultures, ethnic and racial groups, and religions.",
+          "The largest religious affiliation is Christian; freedom of religion is guaranteed by the Charter."
+        ]
+      }
+    ]
+  },
+
+  "history": {
+    "intro": "From the first Aboriginal peoples to modern Canada — the key moments, people, and dates the test asks about.",
+    "sections": [
+      {
+        "heading": "Early Canada (before 1763)",
+        "points": [
+          "Aboriginal peoples lived in what is now Canada for thousands of years before Europeans arrived.",
+          "Norse Vikings established a brief settlement at L'Anse aux Meadows around 1000 AD.",
+          "John Cabot reached Newfoundland in 1497, claiming it for England.",
+          "Jacques Cartier made three voyages (1534, 1535, 1541) and gave Canada its name from the Iroquoian word 'kanata' (village).",
+          "Samuel de Champlain founded Quebec City in 1608 and is known as the 'Father of New France.'",
+          "King Louis XIV made Canada a royal province (royal government) in 1663.",
+          "Hudson's Bay Company chartered in 1670; dominated the fur trade.",
+          "Acadian deportation by British forces began in 1755."
+        ]
+      },
+      {
+        "heading": "British North America (1763–1867)",
+        "points": [
+          "Battle of the Plains of Abraham in 1759 — British under General Wolfe defeated French under General Montcalm; both died.",
+          "Treaty of Paris (1763) — France ceded Canada to Britain.",
+          "Quebec Act (1774) — guaranteed religious freedom for Catholics and restored French civil law; helped Quebec stay loyal during the American Revolution.",
+          "Loyalists fled to Canada from the United States after 1776, bringing the first large wave of English-speaking settlers.",
+          "Slavery: Sir Guy Carleton freed Black Loyalists; abolitionist John Graves Simcoe made the Act Against Slavery in Upper Canada (1793) — among the first such laws in the British Empire.",
+          "War of 1812: Major-General Sir Isaac Brock and Chief Tecumseh led the defence; Laura Secord warned of an American attack at Beaver Dams (1813); the war secured Canada's existence.",
+          "Rebellions of 1837–38 in Upper and Lower Canada led by William Lyon Mackenzie and Louis-Joseph Papineau.",
+          "Lord Durham recommended uniting the colonies and granting responsible government.",
+          "Sir Louis-Hippolyte La Fontaine became the first head of a responsible government in the Canadas in 1849, championing French language rights."
+        ]
+      },
+      {
+        "heading": "Confederation and growth",
+        "points": [
+          "Confederation: July 1, 1867 — the Dominion of Canada was created, joining Ontario, Quebec, Nova Scotia and New Brunswick.",
+          "Sir John A. Macdonald, born in Scotland, was Canada's first Prime Minister (on the $10 bill).",
+          "Sir George-Étienne Cartier was Macdonald's Quebec partner and a leading Father of Confederation.",
+          "Manitoba joined 1870, British Columbia 1871, Prince Edward Island 1873, Yukon 1898, Alberta and Saskatchewan 1905, Newfoundland 1949.",
+          "The Canadian Pacific Railway was completed in 1885, symbolizing national unity.",
+          "Sir Wilfrid Laurier — first French Canadian Prime Minister (1896); on the $5 bill."
+        ]
+      },
+      {
+        "heading": "20th-century Canada",
+        "points": [
+          "World War I (1914–1918) — Canadian Corps captured Vimy Ridge on April 9, 1917 under General Sir Arthur Currie.",
+          "Women's suffrage: Manitoba was the first province to grant women the vote (1916); by 1918 most female citizens 21+ could vote federally.",
+          "Sir Frederick Banting and Charles Best discovered insulin in 1922 at the University of Toronto — saving millions of lives.",
+          "Statute of Westminster (1931) granted Canada legal autonomy from Britain.",
+          "World War II (1939–1945) — over a million Canadians served; Canadians landed at Juno Beach on D-Day (June 6, 1944) and liberated the Netherlands.",
+          "Newfoundland joined Confederation on March 31, 1949.",
+          "Canadians fought in the Korean War (1950–1953).",
+          "Canada helped found the United Nations, NATO, and NORAD."
+        ]
+      },
+      {
+        "heading": "Modern milestones",
+        "points": [
+          "Tommy Douglas, Saskatchewan premier, helped create universal medicare (first plan in 1962).",
+          "Canadian Bill of Rights (1960) — introduced by PM John Diefenbaker.",
+          "Maple Leaf flag raised for the first time in 1965 under PM Lester B. Pearson.",
+          "Official Languages Act (1969) under PM Pierre Elliott Trudeau.",
+          "Multiculturalism Act (1988) reinforced Canada's pluralism.",
+          "Canadian Charter of Rights and Freedoms adopted 1982, part of the Constitution Act, 1982, under PM Pierre Trudeau."
+        ]
+      }
+    ]
+  },
+
+  "modern": {
+    "intro": "How modern Canada was shaped: rights, language, healthcare, and the Charter.",
+    "sections": [
+      {
+        "heading": "Voting and rights expand",
+        "points": [
+          "Manitoba was first to grant women the vote in 1916.",
+          "By 1918, most female citizens aged 21+ could vote in federal elections.",
+          "Indigenous (First Nations) people gained the unrestricted right to vote in federal elections in 1960.",
+          "Canadian Bill of Rights (1960) — predecessor to the Charter; introduced by PM Diefenbaker.",
+          "Canadian Charter of Rights and Freedoms enshrined in the Constitution Act, 1982, under PM Pierre Trudeau."
+        ]
+      },
+      {
+        "heading": "Languages and identity",
+        "points": [
+          "Official Languages Act (1969) gave English and French equal status in the federal government.",
+          "Maple Leaf flag — adopted Feb 15, 1965, under PM Lester B. Pearson; February 15 is National Flag of Canada Day.",
+          "Multiculturalism Act (1988) — Canada was the first country to adopt multiculturalism as an official policy."
+        ]
+      },
+      {
+        "heading": "Universal healthcare",
+        "points": [
+          "Tommy Douglas, a Saskatchewan premier and Baptist minister, championed the first single-payer, universal medical insurance plan (Saskatchewan, 1962).",
+          "Federal Medical Care Act extended publicly funded healthcare across Canada."
+        ]
+      },
+      {
+        "heading": "Quebec and federation",
+        "points": [
+          "Two Quebec referendums on sovereignty: 1980 (60% no) and 1995 (50.6% no).",
+          "Quebec remains part of Canada with a distinctive French-speaking culture and civil-law tradition."
+        ]
+      }
+    ]
+  },
+
+  "govern": {
+    "intro": "Canada's system of government: a constitutional monarchy, a parliamentary democracy, and a federal state.",
+    "sections": [
+      {
+        "heading": "Constitutional monarchy",
+        "points": [
+          "Canada's head of state is a hereditary Sovereign (Queen or King) who reigns under the Constitution and the rule of law.",
+          "The Sovereign is represented federally by the Governor General and in each province by a Lieutenant Governor.",
+          "Governor General typically serves a five-year term, chosen by the PM."
+        ]
+      },
+      {
+        "heading": "Three branches of government",
+        "points": [
+          "Executive: the Crown, the Prime Minister, the Cabinet, and the federal public service — puts laws into effect.",
+          "Legislative: the Sovereign, the Senate, and the House of Commons — makes laws.",
+          "Judicial: the courts — apply and interpret the laws."
+        ]
+      },
+      {
+        "heading": "Parliament",
+        "points": [
+          "Three parts: the Sovereign, the Senate, and the House of Commons.",
+          "Members of Parliament (MPs) are elected to the House of Commons by voters in each electoral district (riding).",
+          "Senators are appointed by the Governor General on the advice of the Prime Minister and serve until age 75.",
+          "There are 338 elected MPs and 105 appointed senators (numbers may change with redistribution)."
+        ]
+      },
+      {
+        "heading": "Prime Minister and Cabinet",
+        "points": [
+          "The leader of the political party with the most MPs becomes Prime Minister.",
+          "The PM chooses Cabinet ministers, who are usually MPs.",
+          "Cabinet sets government policy; Cabinet ministers are responsible to the elected representatives."
+        ]
+      },
+      {
+        "heading": "Three levels of government",
+        "points": [
+          "Federal: national defence, foreign policy, citizenship, criminal law, currency.",
+          "Provincial/territorial: education, healthcare, civil law, natural resources.",
+          "Municipal (city/local): local services such as schools (administration), roads, fire and police."
+        ]
+      }
+    ]
+  },
+
+  "elections": {
+    "intro": "How federal elections work, who can vote, and what to do on election day.",
+    "sections": [
+      {
+        "heading": "Who can vote",
+        "points": [
+          "Must be a Canadian citizen.",
+          "Must be at least 18 years old on voting day.",
+          "Must be on the voters' list (Elections Canada maintains the National Register of Electors)."
+        ]
+      },
+      {
+        "heading": "Federal election basics",
+        "points": [
+          "Members of Parliament (MPs) are elected in their local constituency (riding) — one MP per riding.",
+          "The party with the most elected MPs forms the government; its leader becomes Prime Minister.",
+          "Majority government: party holds at least half the House seats. Minority: less than half.",
+          "Maximum time between federal elections is normally about four years (fixed-date law)."
+        ]
+      },
+      {
+        "heading": "On election day",
+        "points": [
+          "Bring your voter information card and ID showing your name and address (or follow other ID rules).",
+          "Go to your polling station; an Elections Canada official gives you a ballot.",
+          "Behind the voting screen, mark an X next to the name of one candidate.",
+          "Fold the ballot, hand it back to the official, who puts it in the ballot box.",
+          "Your ballot is secret — you are not obliged to tell anyone how you voted."
+        ]
+      },
+      {
+        "heading": "Other elections",
+        "points": [
+          "Provincial/territorial elections choose Members of Provincial Parliament (MPPs), MLAs, or MNAs depending on the province.",
+          "Municipal elections choose mayors and councillors who run cities and towns."
+        ]
+      }
+    ]
+  },
+
+  "justice": {
+    "intro": "How Canada's justice system protects rights and applies the law equally to all.",
+    "sections": [
+      {
+        "heading": "The rule of law",
+        "points": [
+          "The law applies equally to everyone — including the police, governments, and public officials.",
+          "Every person charged with a crime is presumed innocent until proven guilty in a fair trial.",
+          "Habeas corpus protects against unlawful detention."
+        ]
+      },
+      {
+        "heading": "Courts",
+        "points": [
+          "The Supreme Court of Canada is the final court of appeal.",
+          "Federal courts and provincial/territorial courts handle most cases.",
+          "Judges are appointed and are independent of the government."
+        ]
+      },
+      {
+        "heading": "Police",
+        "points": [
+          "The Royal Canadian Mounted Police (RCMP) is the federal police force and also serves as the provincial force in most provinces and territories.",
+          "Ontario and Quebec have their own provincial police forces; many cities have municipal forces.",
+          "Police keep people safe and enforce the law; you can question police about their service or conduct."
+        ]
+      }
+    ]
+  },
+
+  "symbols": {
+    "intro": "The flags, emblems, anthems, sports, and honours that represent Canada.",
+    "sections": [
+      {
+        "heading": "Flag and emblems",
+        "points": [
+          "Maple Leaf flag raised for the first time on February 15, 1965 — National Flag of Canada Day.",
+          "The Canadian Crown is the symbol of our parliamentary democracy.",
+          "The Royal Coat of Arms features the symbols of the founding peoples: English rose, Scottish thistle, Irish shamrock, and French fleurs-de-lys, plus maple leaves.",
+          "National motto: 'A mari usque ad mare' (From sea to sea).",
+          "The beaver became an emblem through the fur trade; it appears on the Canadian five-cent coin.",
+          "The maple tree is the national tree; the maple leaf is the central national symbol."
+        ]
+      },
+      {
+        "heading": "Anthems",
+        "points": [
+          "'O Canada' is the national anthem — music by Calixa Lavallée; French lyrics by Sir Adolphe-Basile Routhier (1880); English lyrics adapted by Robert Stanley Weir (1908).",
+          "Proclaimed as Canada's national anthem in 1980.",
+          "'God Save the Queen' (or King) is the royal anthem."
+        ]
+      },
+      {
+        "heading": "Honours",
+        "points": [
+          "The Victoria Cross (V.C.) is the highest honour available to Canadians, for conspicuous bravery in the presence of the enemy.",
+          "The Order of Canada, created in 1967, honours outstanding lifetime achievement.",
+          "Other honours include the Order of Military Merit and the Star of Courage."
+        ]
+      },
+      {
+        "heading": "Remembrance and sports",
+        "points": [
+          "Remembrance Day — November 11 — honours those who served and died in wars up to the present day.",
+          "The poppy is the symbol of remembrance.",
+          "Hockey is Canada's national winter sport; lacrosse is the national summer sport (Hockey and Lacrosse Acts).",
+          "Other Canadian-invented sports include basketball (Dr. James Naismith, 1891) and five-pin bowling."
+        ]
+      }
+    ]
+  },
+
+  "economy": {
+    "intro": "Canada's economy: industries, trade, and money.",
+    "sections": [
+      {
+        "heading": "Three main types of industry",
+        "points": [
+          "Service industries — most Canadians work here (transportation, education, healthcare, construction, banking, communications, retail, tourism, government).",
+          "Manufacturing industries — paper, high tech, aerospace, automobiles, food.",
+          "Natural resources industries — forestry, fishing, agriculture, mining, energy. About 1 in 10 Canadians works in these industries."
+        ]
+      },
+      {
+        "heading": "Trade",
+        "points": [
+          "The United States is by far Canada's largest trading partner.",
+          "Canada has trade agreements with countries around the world.",
+          "Canada is a member of the G7, G20, OECD, the WTO, and the United Nations."
+        ]
+      },
+      {
+        "heading": "Money",
+        "points": [
+          "The Canadian dollar is Canada's currency.",
+          "The Royal Canadian Mint produces Canadian circulation coins.",
+          "The Bank of Canada is Canada's central bank."
+        ]
+      }
+    ]
+  },
+
+  "regions": {
+    "intro": "Canada's regions, provinces, territories, and their capitals.",
+    "sections": [
+      {
+        "heading": "The country at a glance",
+        "points": [
+          "Canada has 10 provinces and 3 territories.",
+          "Ottawa, in Ontario, is the capital of Canada — chosen in 1857 by Queen Victoria.",
+          "Canada is the second-largest country in the world by area."
+        ]
+      },
+      {
+        "heading": "Atlantic Provinces",
+        "points": [
+          "Newfoundland and Labrador (capital: St. John's) — easternmost point of North America.",
+          "Prince Edward Island (capital: Charlottetown) — smallest province; the 'Birthplace of Confederation' (1864 conference).",
+          "Nova Scotia (capital: Halifax) — most populous Atlantic province; major shipping centre.",
+          "New Brunswick (capital: Fredericton) — Canada's only officially bilingual province."
+        ]
+      },
+      {
+        "heading": "Central Canada",
+        "points": [
+          "Quebec (capital: Quebec City; largest city: Montreal) — home to most French-speaking Canadians; civil-law tradition; Quebec City is the only walled city north of Mexico.",
+          "Ontario (capital: Toronto) — most populous province; Toronto is Canada's largest city and financial centre; Niagara Falls is here."
+        ]
+      },
+      {
+        "heading": "Prairie Provinces",
+        "points": [
+          "Manitoba (capital: Winnipeg) — agriculture and Aboriginal heritage; Winnipeg is the historic hub of the Métis.",
+          "Saskatchewan (capital: Regina) — large grain producer; home to the RCMP training academy.",
+          "Alberta (capital: Edmonton) — largest oil and gas producer; Calgary is famous for the Calgary Stampede."
+        ]
+      },
+      {
+        "heading": "West Coast",
+        "points": [
+          "British Columbia (capital: Victoria; largest city: Vancouver) — Pacific gateway, forestry, mining, film, tourism.",
+          "Port of Vancouver is Canada's largest and busiest port."
+        ]
+      },
+      {
+        "heading": "Northern Territories",
+        "points": [
+          "Yukon (capital: Whitehorse) — famous for the Klondike Gold Rush (1890s).",
+          "Northwest Territories (capital: Yellowknife) — diamond mining; many Aboriginal peoples.",
+          "Nunavut (capital: Iqaluit) — created in 1999; 'Nunavut' means 'our land' in Inuktitut.",
+          "The territories together cover about one third of Canada's land mass."
+        ]
+      }
+    ]
+  },
+
+  "study": {
+    "intro": "The official sample test questions from the back of Discover Canada. Use these to test yourself before the real exam.",
+    "sections": [
+      {
+        "heading": "Practising",
+        "points": [
+          "Every question on the citizenship test is based on Discover Canada.",
+          "The test is 20 questions in 45 minutes (2026 format). You need 15 correct to pass.",
+          "Up to 3 attempts before a hearing is scheduled.",
+          "Use the mock exam in this app to simulate the timer and the experience."
+        ]
+      }
+    ]
+  }
+}

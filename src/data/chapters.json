@@ -1,0 +1,74 @@
+[
+  {
+    "slug": "applying",
+    "title": "Applying for Citizenship",
+    "pageStart": 8,
+    "pageEnd": 10
+  },
+  {
+    "slug": "rights",
+    "title": "Rights and Responsibilities of Citizenship",
+    "pageStart": 11,
+    "pageEnd": 15
+  },
+  {
+    "slug": "who",
+    "title": "Who We Are",
+    "pageStart": 16,
+    "pageEnd": 22
+  },
+  {
+    "slug": "history",
+    "title": "Canada's History",
+    "pageStart": 23,
+    "pageEnd": 44
+  },
+  {
+    "slug": "modern",
+    "title": "Modern Canada",
+    "pageStart": 45,
+    "pageEnd": 53
+  },
+  {
+    "slug": "govern",
+    "title": "How Canadians Govern Themselves",
+    "pageStart": 54,
+    "pageEnd": 59
+  },
+  {
+    "slug": "elections",
+    "title": "Federal Elections",
+    "pageStart": 60,
+    "pageEnd": 74
+  },
+  {
+    "slug": "justice",
+    "title": "The Justice System",
+    "pageStart": 75,
+    "pageEnd": 77
+  },
+  {
+    "slug": "symbols",
+    "title": "Canadian Symbols",
+    "pageStart": 78,
+    "pageEnd": 89
+  },
+  {
+    "slug": "economy",
+    "title": "Canada's Economy",
+    "pageStart": 90,
+    "pageEnd": 92
+  },
+  {
+    "slug": "regions",
+    "title": "Canada's Regions",
+    "pageStart": 93,
+    "pageEnd": 105
+  },
+  {
+    "slug": "study",
+    "title": "Study Questions",
+    "pageStart": 106,
+    "pageEnd": 110
+  }
+]

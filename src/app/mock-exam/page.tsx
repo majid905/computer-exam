@@ -1,0 +1,139 @@
+"use client";
+
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useUserState } from "@/lib/storage";
+import {
+  MOCK_EXAM_DURATION_SECONDS,
+  MOCK_EXAM_PASS,
+  MOCK_EXAM_SIZE,
+  formatTime,
+} from "@/lib/exam";
+
+const DRAFT_KEY = "pc:mock:draft:v1";
+
+type Draft = { startedAt: string; questionIds: string[]; selected: Record<string, number | null> };
+
+export default function MockExamIntro() {
+  const router = useRouter();
+  const [state] = useUserState();
+  const last = state.attempts[state.attempts.length - 1];
+  const [draft, setDraft] = useState<Draft | null>(null);
+  const [now, setNow] = useState<number>(Date.now());
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (raw) setDraft(JSON.parse(raw) as Draft);
+    } catch {
+      setDraft(null);
+    }
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const draftRemaining = draft
+    ? Math.max(
+        0,
+        MOCK_EXAM_DURATION_SECONDS -
+          Math.floor((now - new Date(draft.startedAt).getTime()) / 1000),
+      )
+    : 0;
+  const draftAnswered = draft
+    ? Object.values(draft.selected).filter((v) => v !== null).length
+    : 0;
+
+  function startFresh() {
+    try {
+      localStorage.removeItem(DRAFT_KEY);
+    } catch {}
+    router.push("/mock-exam/take");
+  }
+
+  return (
+    <div className="mx-auto max-w-3xl px-5 py-8 sm:py-12">
+      <header className="mb-6">
+        <p className="text-xs font-bold uppercase tracking-wider text-[var(--color-brand)]">
+          Mock exam
+        </p>
+        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight mt-1">
+          Simulate the IRCC online test
+        </h1>
+        <p className="text-[var(--color-muted)] mt-2 max-w-2xl">
+          You'll get {MOCK_EXAM_SIZE} questions drawn from across the guide.
+          You need {MOCK_EXAM_PASS} correct to pass. The timer is{" "}
+          {MOCK_EXAM_DURATION_SECONDS / 60} minutes — the new 2026 format.
+        </p>
+      </header>
+
+      <section className="ud-card p-6 mb-6">
+        <h2 className="font-bold text-[var(--color-ink)]">What to expect</h2>
+        <ul className="mt-3 space-y-2 text-sm text-[var(--color-ink-2)]">
+          <li className="flex gap-2">
+            <span aria-hidden>⏱️</span> 45-minute timer in the corner. Mock exam
+            auto-submits when time is up.
+          </li>
+          <li className="flex gap-2">
+            <span aria-hidden>📋</span> 20 multiple-choice questions, balanced
+            across chapters.
+          </li>
+          <li className="flex gap-2">
+            <span aria-hidden>🎯</span> Pass mark: 15 out of 20 (75%) — same as
+            the real test.
+          </li>
+          <li className="flex gap-2">
+            <span aria-hidden>🔁</span> Results break down by chapter so you
+            know what to re-study.
+          </li>
+        </ul>
+      </section>
+
+      {draft && draftRemaining > 0 && (
+        <section className="ud-card p-6 mb-6 bg-[var(--color-warning-soft)] border-[var(--color-warning)]">
+          <h2 className="font-bold text-[var(--color-warning)]">
+            You have an exam in progress
+          </h2>
+          <p className="text-sm text-[var(--color-ink-2)] mt-1">
+            {draftAnswered}/{draft.questionIds.length} answered ·{" "}
+            <strong>{formatTime(draftRemaining)} left</strong> on the timer.
+          </p>
+          <div className="mt-4 flex gap-2 flex-wrap">
+            <Link href="/mock-exam/take" className="ud-btn ud-btn-primary">
+              Resume exam
+            </Link>
+            <button className="ud-btn ud-btn-ghost" onClick={startFresh}>
+              Discard & start new
+            </button>
+          </div>
+        </section>
+      )}
+
+      {last && (
+        <section className="ud-card p-6 mb-6">
+          <h2 className="font-bold text-[var(--color-ink)]">Your last attempt</h2>
+          <div className="mt-2 flex items-center gap-3">
+            <span
+              className={`ud-chip ${last.passed ? "ud-chip-success" : "ud-chip-danger"}`}
+            >
+              {last.passed ? "Passed" : "Did not pass"}
+            </span>
+            <span className="text-sm text-[var(--color-muted)]">
+              {last.score} / {last.total} on{" "}
+              {new Date(last.finishedAt).toLocaleDateString()}
+            </span>
+          </div>
+        </section>
+      )}
+
+      <div className="flex gap-2 flex-wrap">
+        <button className="ud-btn ud-btn-primary" onClick={startFresh}>
+          {draft && draftRemaining > 0 ? "Start a new exam" : "Start mock exam"}
+        </button>
+        <Link href="/practice" className="ud-btn ud-btn-ghost">
+          Practice first
+        </Link>
+      </div>
+    </div>
+  );
+}
