@@ -6,6 +6,8 @@ export const metadata: Metadata = {
   description: "Choose a pricing plan for Passpilot study and mock exams.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function PricingPage() {
   const plans = await getPricingPlans();
 

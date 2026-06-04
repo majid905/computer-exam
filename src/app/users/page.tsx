@@ -6,6 +6,8 @@ export const metadata: Metadata = {
   description: "Manage Passpilot users and roles from the backend.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function UsersPage() {
   const users = await getAllUsers();
 

@@ -1,35 +1,54 @@
-import mysql, { ResultSetHeader } from "mysql2/promise";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 
-declare global {
-  var __passpilotMysqlPool: mysql.Pool | undefined;
+// Cloudflare D1 (SQLite) database access.
+// The DB binding is declared in wrangler.jsonc as `DB`. We keep the original
+// query()/execute() interface so existing call sites don't need to change.
+//
+// Minimal local D1 types so this file doesn't depend on the global workerd
+// runtime types (worker-configuration.d.ts), which are excluded from the app
+// type-check because they override the DOM lib's Response/fetch typings.
+interface D1Meta {
+  last_row_id?: number;
+  changes?: number;
+}
+interface D1Result<T> {
+  results: T[];
+  success: boolean;
+  meta: D1Meta;
+}
+interface D1PreparedStatement {
+  bind(...values: unknown[]): D1PreparedStatement;
+  all<T = unknown>(): Promise<D1Result<T>>;
+  run(): Promise<D1Result<unknown>>;
+}
+interface D1Database {
+  prepare(query: string): D1PreparedStatement;
 }
 
-const pool =
-  global.__passpilotMysqlPool ||
-  mysql.createPool({
-    host: process.env.MYSQL_HOST ?? "localhost",
-    port: Number(process.env.MYSQL_PORT ?? 3306),
-    user: process.env.MYSQL_USER ?? "root",
-    password: process.env.MYSQL_PASSWORD ?? "",
-    database: process.env.MYSQL_DATABASE ?? "passpilot",
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0,
-    decimalNumbers: true,
-  });
-
-if (process.env.NODE_ENV !== "production") {
-  global.__passpilotMysqlPool = pool;
+function db(): D1Database {
+  const { env } = getCloudflareContext();
+  const binding = (env as { DB?: D1Database }).DB;
+  if (!binding) {
+    throw new Error("D1 binding `DB` is not configured (check wrangler.jsonc).");
+  }
+  return binding;
 }
 
-export async function query<T = any>(sql: string, params?: any[]) {
-  const [rows] = await pool.query(sql, params);
-  return rows as T[];
+export async function query<T = any>(sql: string, params: any[] = []) {
+  const { results } = await db().prepare(sql).bind(...params).all<T>();
+  return (results ?? []) as T[];
 }
 
-export async function execute(sql: string, params?: any[]): Promise<ResultSetHeader> {
-  const [result] = await pool.execute<ResultSetHeader>(sql, params);
-  return result;
+// Mirrors the subset of mysql2's ResultSetHeader that the app actually uses.
+export interface ExecuteResult {
+  insertId: number;
+  affectedRows: number;
 }
 
-export default pool;
+export async function execute(sql: string, params: any[] = []): Promise<ExecuteResult> {
+  const { meta } = await db().prepare(sql).bind(...params).run();
+  return {
+    insertId: Number(meta?.last_row_id ?? 0),
+    affectedRows: Number(meta?.changes ?? 0),
+  };
+}

@@ -7,6 +7,8 @@ export const metadata: Metadata = {
   description: "Browse all study chapters for the Canadian citizenship test.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function ChaptersPage() {
   const chapters = await getChapters();
 

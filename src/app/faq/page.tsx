@@ -6,6 +6,8 @@ export const metadata: Metadata = {
   description: "Frequently asked questions for Passpilot study and mock exam preparation.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function FaqPage() {
   const faqs = await getFaqs();
 

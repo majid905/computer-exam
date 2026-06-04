@@ -1,9 +1,18 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "passpilot",
+  "main": ".open-next/worker.js",
   "compatibility_date": "2026-05-29",
+  "compatibility_flags": ["nodejs_compat"],
   "assets": {
-    "directory": "./out",
-    "not_found_handling": "404-page"
-  }
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "passpilot",
+      "database_id": "d996d5de-0bb7-4c75-9951-cd8a490302c8"
+    }
+  ]
 }
