@@ -6,6 +6,8 @@ export const metadata: Metadata = {
   description: "View the available language options for Passpilot.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function LanguagePage() {
   const languages = await getLanguages();
 

@@ -57,7 +57,9 @@ export async function POST(request: Request) {
 
     // Update last login
     const { updateUser } = await import("@/lib/backend");
-    await updateUser(user.id, { last_login_at: new Date().toISOString() });
+    await updateUser(user.id, {
+      last_login_at: new Date().toISOString().slice(0, 19).replace("T", " "),
+    });
 
     const { password: _pw, ...safeUser } = user;
     return NextResponse.json({

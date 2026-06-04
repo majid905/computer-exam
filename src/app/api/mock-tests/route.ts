@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     if (mode === "random") {
       try {
         const rows = await query<{ id: number }>(
-          `SELECT id FROM questions WHERE status = 'active' ORDER BY RAND() LIMIT ?`,
+          `SELECT id FROM questions WHERE status = 'active' ORDER BY RANDOM() LIMIT ?`,
           [totalQuestions]
         );
         for (const row of rows) {
