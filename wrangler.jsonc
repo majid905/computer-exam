@@ -4,7 +4,10 @@
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-05-29",
   "compatibility_flags": ["nodejs_compat"],
-  "routes": [{ "pattern": "passpilot.ca", "custom_domain": true }],
+  "routes": [
+    { "pattern": "passpilot.ca", "custom_domain": true },
+    { "pattern": "www.passpilot.ca", "custom_domain": true }
+  ],
   "workers_dev": true,
   "assets": {
     "directory": ".open-next/assets",
