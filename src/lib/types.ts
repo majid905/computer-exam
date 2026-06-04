@@ -74,9 +74,10 @@ export type MockExamAttempt = {
   startedAt: string;
   finishedAt: string;
   durationSeconds: number;
-  score: number; // 0-20
-  total: number; // 20
-  passed: boolean; // >= 15/20
+  score: number;
+  total: number;
+  passed: boolean;
+  passMarks: number;
   byChapter: Record<string, { correct: number; total: number }>;
   questionIds: string[];
   answers: Array<{ qid: string; selected: number | null; correct: boolean }>;

@@ -2,62 +2,144 @@
 
 import Link from "next/link";
 import { notFound, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useUserState, applyDailyStudy } from "@/lib/storage";
 import {
-  chapters,
   CHAPTER_EMOJI,
-  CHAPTER_ORDER,
-  getChapter,
-  getQuestionsForChapter,
-  getSummary,
   officialPdfPageUrl,
 } from "@/lib/content";
+import { RequireAuth } from "@/components/app/RequireAuth";
+import type { Chapter, ChapterSummary, Question } from "@/lib/types";
 
 export default function StudyChapterClient({ slug }: { slug: string }) {
+  return (
+    <RequireAuth>
+      <StudyChapterInner slug={slug} />
+    </RequireAuth>
+  );
+}
+
+function StudyChapterInner({ slug }: { slug: string }) {
   const router = useRouter();
-  const chapter = getChapter(slug);
   const [, update] = useUserState();
+  const [chapter, setChapter] = useState<Chapter | null>(null);
+  const [summary, setSummary] = useState<ChapterSummary | null>(null);
+  const [qs, setQs] = useState<Question[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [prevTitle, setPrevTitle] = useState<string | null>(null);
+  const [nextTitle, setNextTitle] = useState<string | null>(null);
+  const [allChapters, setAllChapters] = useState<{slug: string; title: string}[]>([]);
+
+  // Load all chapters for navigation
+  useEffect(() => {
+    fetch("/api/chapters/")
+      .then((r) => r.json())
+      .then((data) => {
+        const list = Array.isArray(data) ? data : [];
+        setAllChapters(list.map((c: any) => ({ slug: c.slug, title: c.title })));
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
-    if (!chapter) return;
-    update((s) => {
-      const next = applyDailyStudy(s);
-      const cp = next.chapters[chapter.slug] ?? {
-        read: false,
-        practiceAttempts: 0,
-        practiceCorrect: 0,
-        practiceTotal: 0,
-      };
-      return {
-        ...next,
-        chapters: {
-          ...next.chapters,
-          [chapter.slug]: {
-            ...cp,
-            read: true,
-            lastRead: new Date().toISOString(),
-          },
-        },
-      };
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chapter?.slug]);
+    setLoading(true);
+    fetch(`/api/chapters/${slug}`)
+      .then((r) => {
+        if (!r.ok) throw new Error("Chapter not found");
+        return r.json();
+      })
+      .then((data) => {
+        setChapter({ slug: data.slug, title: data.title, pageStart: 1, pageEnd: 10 });
+        try {
+          if (data.body) setSummary(JSON.parse(data.body));
+        } catch {
+          setSummary(null);
+        }
+        const mappedQuestions: Question[] = (data.questions ?? []).map((q: any) => ({
+          id: String(q.id),
+          chapter: data.slug,
+          topic: q.topic ?? "General",
+          difficulty: q.difficulty === "easy" ? 1 : q.difficulty === "medium" ? 2 : 3,
+          source: q.source ?? "Discover Canada",
+          question: q.question,
+          options: (q.options ?? []).map((o: any) => o.option_text),
+          answer: (q.options ?? []).findIndex((o: any) => o.is_correct === 1),
+          explanation: q.explanation,
+        }));
+        setQs(mappedQuestions);
+        setLoading(false);
+
+        // Mark as read in localStorage
+        update((s) => {
+          const next = applyDailyStudy(s);
+          const cp = next.chapters[data.slug] ?? {
+            read: false,
+            practiceAttempts: 0,
+            practiceCorrect: 0,
+            practiceTotal: 0,
+          };
+          return {
+            ...next,
+            chapters: {
+              ...next.chapters,
+              [data.slug]: {
+                ...cp,
+                read: true,
+                lastRead: new Date().toISOString(),
+              },
+            },
+          };
+        });
+
+        // Save to database
+        if (data.id) {
+          fetch("/api/user-progress/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              chapter_id: data.id,
+              completed_questions: data.questions?.length ?? 1,
+              total_questions: data.questions?.length ?? 1,
+              percentage: 100,
+            }),
+          }).catch(() => {});
+        }
+      })
+      .catch(() => setLoading(false));
+  }, [slug, update]);
+
+  const idx = chapter && allChapters.length ? allChapters.findIndex((c) => c.slug === chapter.slug) : -1;
+  const prevSlug = idx > 0 ? allChapters[idx - 1]?.slug : undefined;
+  const nextSlug = idx >= 0 && idx < allChapters.length - 1 ? allChapters[idx + 1]?.slug : undefined;
+
+  useEffect(() => {
+    if (prevSlug) {
+      fetch(`/api/chapters/${prevSlug}`)
+        .then((r) => r.json())
+        .then((d) => setPrevTitle(d.title));
+    } else {
+      setPrevTitle(null);
+    }
+    if (nextSlug) {
+      fetch(`/api/chapters/${nextSlug}`)
+        .then((r) => r.json())
+        .then((d) => setNextTitle(d.title));
+    } else {
+      setNextTitle(null);
+    }
+  }, [prevSlug, nextSlug]);
+
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-3xl px-5 py-8 sm:py-10">
+        <p className="text-[var(--color-muted)]">Loading chapter...</p>
+      </div>
+    );
+  }
 
   if (!chapter) {
     notFound();
   }
-
-  const summary = getSummary(chapter.slug);
-  const qs = getQuestionsForChapter(chapter.slug);
-
-  const idx = CHAPTER_ORDER.indexOf(chapter.slug);
-  const prevSlug = CHAPTER_ORDER.slice(0, idx).reverse().find(
-    (s) => s !== "study",
-  );
-  const nextSlug = CHAPTER_ORDER.slice(idx + 1).find((s) => s !== "applying");
-  const prev = prevSlug ? chapters.find((c) => c.slug === prevSlug) : null;
-  const next = nextSlug ? chapters.find((c) => c.slug === nextSlug) : null;
 
   return (
     <div className="mx-auto max-w-3xl px-5 py-8 sm:py-10">
@@ -74,7 +156,7 @@ export default function StudyChapterClient({ slug }: { slug: string }) {
           </span>
           <div>
             <p className="text-xs font-bold uppercase tracking-wider text-[var(--color-muted)]">
-              Chapter {idx + 1} of {CHAPTER_ORDER.length}
+              Chapter {idx >= 0 ? idx + 1 : "?"} of {allChapters.length || "?"}
             </p>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
               {chapter.title}
@@ -83,13 +165,12 @@ export default function StudyChapterClient({ slug }: { slug: string }) {
         </div>
         <div className="mt-4">
           <a
-            href={officialPdfPageUrl(chapter.pageStart)}
+            href={officialPdfPageUrl(1)}
             target="_blank"
             rel="noopener noreferrer"
             className="ud-btn ud-btn-ghost ud-btn-sm"
           >
-            📄 Read the official IRCC PDF (pages {chapter.pageStart}–
-            {chapter.pageEnd}) ↗
+            📄 Read the official IRCC PDF ↗
           </a>
         </div>
       </header>
@@ -147,22 +228,22 @@ export default function StudyChapterClient({ slug }: { slug: string }) {
       </section>
 
       <nav className="mt-10 flex items-center justify-between gap-3">
-        {prev ? (
+        {prevSlug && prevTitle ? (
           <button
             className="ud-btn ud-btn-ghost ud-btn-sm"
-            onClick={() => router.push(`/study/${prev.slug}`)}
+            onClick={() => router.push(`/study/${prevSlug}`)}
           >
-            ← {prev.title}
+            ← {prevTitle}
           </button>
         ) : (
           <span />
         )}
-        {next ? (
+        {nextSlug && nextTitle ? (
           <button
             className="ud-btn ud-btn-primary ud-btn-sm"
-            onClick={() => router.push(`/study/${next.slug}`)}
+            onClick={() => router.push(`/study/${nextSlug}`)}
           >
-            {next.title} →
+            {nextTitle} →
           </button>
         ) : (
           <span />

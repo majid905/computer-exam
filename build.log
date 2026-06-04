@@ -1,0 +1,113 @@
+▲ Next.js 16.2.6 (Turbopack)
+
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+✓ Compiled successfully in 9.1s
+  Running TypeScript ...
+  Finished TypeScript in 9.0s ...
+  Collecting page data using 11 workers ...
+  Generating static pages using 11 workers (0/90) ...
+  Generating static pages using 11 workers (22/90) 
+  Generating static pages using 11 workers (44/90) 
+  Generating static pages using 11 workers (67/90) 
+✓ Generating static pages using 11 workers (90/90) in 1318ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ○ /admin
+├ ○ /admin/banners
+├ ○ /admin/blogs
+├ ○ /admin/chapters
+├ ○ /admin/contact-messages
+├ ○ /admin/faqs
+├ ○ /admin/languages
+├ ○ /admin/mock-tests
+├ ○ /admin/notifications
+├ ○ /admin/pricing
+├ ○ /admin/provinces
+├ ○ /admin/questions
+├ ○ /admin/settings
+├ ○ /admin/testimonials
+├ ○ /admin/users
+├ ƒ /api/app-settings
+├ ƒ /api/auth/login
+├ ƒ /api/auth/logout
+├ ƒ /api/auth/me
+├ ƒ /api/auth/register
+├ ƒ /api/banners
+├ ƒ /api/banners/[id]
+├ ƒ /api/blog-categories
+├ ƒ /api/blogs
+├ ƒ /api/blogs/[slug]
+├ ƒ /api/categories
+├ ƒ /api/categories/[id]
+├ ƒ /api/chapters
+├ ƒ /api/chapters/[slug]
+├ ƒ /api/contact-messages
+├ ƒ /api/faqs
+├ ƒ /api/faqs/[id]
+├ ƒ /api/languages
+├ ƒ /api/languages/[id]
+├ ƒ /api/mock-tests
+├ ƒ /api/mock-tests/[id]
+├ ƒ /api/notifications
+├ ƒ /api/notifications/[id]
+├ ƒ /api/notifications/unread
+├ ƒ /api/payments
+├ ƒ /api/practice-sessions
+├ ƒ /api/pricing
+├ ƒ /api/pricing/[id]
+├ ƒ /api/provinces
+├ ƒ /api/provinces/[id]
+├ ƒ /api/questions
+├ ƒ /api/questions/[id]
+├ ƒ /api/questions/by-chapter/[chapter_id]
+├ ƒ /api/test-attempts
+├ ƒ /api/testimonials
+├ ƒ /api/testimonials/[id]
+├ ƒ /api/topics
+├ ƒ /api/user-data
+├ ƒ /api/user-progress
+├ ƒ /api/user-progress/[user_id]
+├ ƒ /api/user-settings
+├ ƒ /api/users
+├ ƒ /api/users/[id]
+├ ○ /app
+├ ○ /chapters
+├ ○ /faq
+├ ○ /language
+├ ○ /login
+├ ○ /mock-exam
+├ ○ /mock-exam/result
+├ ○ /mock-exam/take
+├ ○ /onboarding
+├ ○ /practice
+├ ● /practice/[slug]
+│ ├ /practice/applying
+│ ├ /practice/rights
+│ ├ /practice/who
+│ └ [+9 more paths]
+├ ○ /practice/review
+├ ○ /pricing
+├ ○ /progress
+├ ○ /provincial
+├ ○ /register
+├ ○ /settings
+├ ○ /study
+├ ● /study/[slug]
+│ ├ /study/applying
+│ ├ /study/rights
+│ ├ /study/who
+│ └ [+9 more paths]
+├ ○ /users
+└ ○ /welcome
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+●  (SSG)      prerendered as static HTML (uses generateStaticParams)
+ƒ  (Dynamic)  server-rendered on demand
+

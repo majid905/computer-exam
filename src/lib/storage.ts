@@ -44,13 +44,18 @@ function loadFromStorage(): UserState {
 function writeToStorage(state: UserState) {
   if (typeof window === "undefined") return;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  window.dispatchEvent(new CustomEvent("pc:state:updated"));
+  // Defer event dispatch to avoid setState-during-render warnings
+  setTimeout(() => {
+    window.dispatchEvent(new CustomEvent("pc:state:updated"));
+  }, 0);
 }
 
 export function resetState() {
   if (typeof window === "undefined") return;
   localStorage.removeItem(STORAGE_KEY);
-  window.dispatchEvent(new CustomEvent("pc:state:updated"));
+  setTimeout(() => {
+    window.dispatchEvent(new CustomEvent("pc:state:updated"));
+  }, 0);
 }
 
 export function useUserState(): [

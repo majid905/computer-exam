@@ -1,9 +1,20 @@
-import { questions } from "./content";
 import type { Question, MockExamAttempt } from "./types";
 
 export const MOCK_EXAM_SIZE = 20;
 export const MOCK_EXAM_PASS = 15;
 export const MOCK_EXAM_DURATION_SECONDS = 45 * 60;
+
+export type ExamConfig = {
+  size: number;
+  pass: number;
+  durationSeconds: number;
+};
+
+export const DEFAULT_EXAM_CONFIG: ExamConfig = {
+  size: MOCK_EXAM_SIZE,
+  pass: MOCK_EXAM_PASS,
+  durationSeconds: MOCK_EXAM_DURATION_SECONDS,
+};
 
 export function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -15,7 +26,7 @@ export function shuffle<T>(arr: T[]): T[] {
 }
 
 /** Pick a balanced set across chapters, then top up randomly. */
-export function pickMockExamQuestions(size = MOCK_EXAM_SIZE): Question[] {
+export function pickMockExamQuestions(allQuestions: Question[], size = MOCK_EXAM_SIZE): Question[] {
   const studyableChapters = [
     "rights",
     "who",
@@ -33,7 +44,7 @@ export function pickMockExamQuestions(size = MOCK_EXAM_SIZE): Question[] {
   const usedIds = new Set<string>();
 
   for (const slug of studyableChapters) {
-    const pool = shuffle(questions.filter((q) => q.chapter === slug));
+    const pool = shuffle(allQuestions.filter((q) => q.chapter === slug));
     for (let i = 0; i < perChapter && i < pool.length; i++) {
       picked.push(pool[i]);
       usedIds.add(pool[i].id);
@@ -41,7 +52,7 @@ export function pickMockExamQuestions(size = MOCK_EXAM_SIZE): Question[] {
   }
 
   // Top up to exact size
-  const remainder = shuffle(questions.filter((q) => !usedIds.has(q.id)));
+  const remainder = shuffle(allQuestions.filter((q) => !usedIds.has(q.id)));
   for (const q of remainder) {
     if (picked.length >= size) break;
     picked.push(q);
@@ -55,7 +66,9 @@ export function scoreAttempt(
   pickedQuestions: Question[],
   startedAt: Date,
   finishedAt: Date,
+  config: Partial<ExamConfig> = {},
 ): MockExamAttempt {
+  const cfg = { ...DEFAULT_EXAM_CONFIG, ...config };
   let score = 0;
   const byChapter: Record<string, { correct: number; total: number }> = {};
   const answers: MockExamAttempt["answers"] = [];
@@ -78,7 +91,8 @@ export function scoreAttempt(
     durationSeconds: Math.round((finishedAt.getTime() - startedAt.getTime()) / 1000),
     score,
     total,
-    passed: score >= Math.ceil((total / MOCK_EXAM_SIZE) * MOCK_EXAM_PASS),
+    passed: score >= Math.ceil((total / cfg.size) * cfg.pass),
+    passMarks: Math.ceil((total / cfg.size) * cfg.pass),
     byChapter,
     questionIds: pickedQuestions.map((q) => q.id),
     answers,

@@ -1,12 +1,61 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useUserState } from "@/lib/storage";
-import { chapters, CHAPTER_EMOJI, getQuestionsForChapter } from "@/lib/content";
+import { CHAPTER_EMOJI } from "@/lib/content";
 import { ProgressBar } from "@/components/ui/Progress";
+import { RequireAuth } from "@/components/app/RequireAuth";
+import type { Chapter } from "@/lib/types";
 
 export default function StudyIndexPage() {
+  return (
+    <RequireAuth>
+      <StudyIndex />
+    </RequireAuth>
+  );
+}
+
+function StudyIndex() {
   const [state] = useUserState();
+  const [chapters, setChapters] = useState<Chapter[]>([]);
+  const [questionCounts, setQuestionCounts] = useState<Record<string, number>>({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    fetch("/api/chapters/")
+      .then((r) => r.json())
+      .then((data) => {
+        const mapped: Chapter[] = data.map((c: any) => ({
+          slug: c.slug,
+          title: c.title,
+          pageStart: 1,
+          pageEnd: 10,
+        }));
+        setChapters(mapped);
+        // Load question counts per chapter
+        Promise.all(
+          mapped.map(async (ch) => {
+            const res = await fetch(`/api/chapters/${ch.slug}/`);
+            const chapterData = await res.json();
+            return { slug: ch.slug, count: chapterData.questions?.length ?? 0 };
+          }),
+        ).then((counts) => {
+          setQuestionCounts(Object.fromEntries(counts.map((c) => [c.slug, c.count])));
+          setLoading(false);
+        });
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-4xl px-5 py-8 sm:py-10">
+        <p className="text-[var(--color-muted)]">Loading chapters...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-4xl px-5 py-8 sm:py-10">
@@ -15,7 +64,7 @@ export default function StudyIndexPage() {
           Study
         </p>
         <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight mt-1">
-          Discover Canada — 12 chapters
+          Discover Canada — {chapters.length} chapters
         </h1>
         <p className="text-[var(--color-muted)] mt-2 max-w-2xl">
           The complete official IRCC study guide. Each chapter is split into
@@ -26,7 +75,7 @@ export default function StudyIndexPage() {
       <ul className="space-y-3">
         {chapters.map((c, i) => {
           const cp = state.chapters[c.slug];
-          const qs = getQuestionsForChapter(c.slug).length;
+          const qs = questionCounts[c.slug] ?? 0;
           const mastery =
             cp && cp.practiceTotal > 0
               ? Math.round((cp.practiceCorrect / cp.practiceTotal) * 100)
@@ -53,7 +102,7 @@ export default function StudyIndexPage() {
                     {c.title}
                   </h2>
                   <p className="text-xs text-[var(--color-muted)] mt-1">
-                    Pages {c.pageStart}–{c.pageEnd} · {qs} practice questions
+                    {qs} practice questions
                   </p>
                 </div>
                 <div className="hidden sm:block w-40 shrink-0">

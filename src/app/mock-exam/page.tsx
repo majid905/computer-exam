@@ -10,17 +10,39 @@ import {
   MOCK_EXAM_SIZE,
   formatTime,
 } from "@/lib/exam";
+import { RequireAuth } from "@/components/app/RequireAuth";
 
 const DRAFT_KEY = "pc:mock:draft:v1";
 
 type Draft = { startedAt: string; questionIds: string[]; selected: Record<string, number | null> };
 
+type MockTest = {
+  id: number;
+  title: string;
+  description: string | null;
+  time_limit: number;
+  total_marks: number;
+  pass_marks: number;
+  status: string;
+};
+
 export default function MockExamIntro() {
+  return (
+    <RequireAuth>
+      <MockExamIntroInner />
+    </RequireAuth>
+  );
+}
+
+function MockExamIntroInner() {
   const router = useRouter();
   const [state] = useUserState();
   const last = state.attempts[state.attempts.length - 1];
   const [draft, setDraft] = useState<Draft | null>(null);
   const [now, setNow] = useState<number>(Date.now());
+  const [mockTests, setMockTests] = useState<MockTest[]>([]);
+  const [selectedMockId, setSelectedMockId] = useState<number | null>(null);
+  const [unlockedIds, setUnlockedIds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     try {
@@ -33,10 +55,39 @@ export default function MockExamIntro() {
     return () => clearInterval(id);
   }, []);
 
+  useEffect(() => {
+    Promise.all([
+      fetch("/api/mock-tests").then((r) => r.json()),
+      fetch("/api/test-attempts").then((r) => r.json()),
+    ])
+      .then(([testsData, attemptsData]) => {
+        const tests = Array.isArray(testsData) ? testsData : [];
+        setMockTests(tests);
+        const attempts = Array.isArray(attemptsData) ? attemptsData : [];
+        // Sequential unlocking: first test always unlocked, then pass previous to unlock next
+        const passedIds = new Set(attempts.filter((a: any) => a.result === "pass").map((a: any) => a.mock_test_id));
+        const unlocked = new Set<number>();
+        for (let i = 0; i < tests.length; i++) {
+          if (i === 0 || passedIds.has(tests[i - 1].id)) {
+            unlocked.add(tests[i].id);
+          }
+        }
+        setUnlockedIds(unlocked);
+        const firstUnlocked = tests.find((t: MockTest) => unlocked.has(t.id));
+        if (firstUnlocked) setSelectedMockId(firstUnlocked.id);
+      })
+      .catch(() => {});
+  }, []);
+
+  const activeMock = mockTests.find((m) => m.id === selectedMockId) ?? mockTests.find((m) => unlockedIds.has(m.id));
+  const durationSeconds = (activeMock?.time_limit ?? MOCK_EXAM_DURATION_SECONDS / 60) * 60;
+  const examSize = activeMock?.total_marks ?? MOCK_EXAM_SIZE;
+  const passMarks = activeMock?.pass_marks ?? MOCK_EXAM_PASS;
+
   const draftRemaining = draft
     ? Math.max(
         0,
-        MOCK_EXAM_DURATION_SECONDS -
+        durationSeconds -
           Math.floor((now - new Date(draft.startedAt).getTime()) / 1000),
       )
     : 0;
@@ -48,6 +99,9 @@ export default function MockExamIntro() {
     try {
       localStorage.removeItem(DRAFT_KEY);
     } catch {}
+    if (activeMock) {
+      sessionStorage.setItem("pc:activeMockId", String(activeMock.id));
+    }
     router.push("/mock-exam/take");
   }
 
@@ -61,25 +115,60 @@ export default function MockExamIntro() {
           Simulate the IRCC online test
         </h1>
         <p className="text-[var(--color-muted)] mt-2 max-w-2xl">
-          You'll get {MOCK_EXAM_SIZE} questions drawn from across the guide.
-          You need {MOCK_EXAM_PASS} correct to pass. The timer is{" "}
-          {MOCK_EXAM_DURATION_SECONDS / 60} minutes — the new 2026 format.
+          You'll get {examSize} questions drawn from across the guide.
+          You need {passMarks} correct to pass. The timer is{" "}
+          {Math.round(durationSeconds / 60)} minutes — the new 2026 format.
         </p>
       </header>
+
+      {mockTests.length > 1 && (
+        <section className="ud-card p-6 mb-6">
+          <h2 className="font-bold text-[var(--color-ink)]">Choose a mock test</h2>
+          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {mockTests.map((mt) => {
+              const isUnlocked = unlockedIds.has(mt.id);
+              const isSelected = selectedMockId === mt.id;
+              return (
+                <button
+                  key={mt.id}
+                  onClick={() => isUnlocked && setSelectedMockId(mt.id)}
+                  disabled={!isUnlocked}
+                  className={`text-left ud-card p-4 border-2 transition-colors ${
+                    isSelected
+                      ? "border-[var(--color-brand)] bg-[var(--color-brand-soft)]"
+                      : isUnlocked
+                        ? "border-[var(--color-border)] hover:border-[var(--color-muted)]"
+                        : "border-[var(--color-border)] opacity-50 cursor-not-allowed"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-bold text-[var(--color-ink)]">{mt.title}</h3>
+                    {!isUnlocked && <span className="text-xs">🔒</span>}
+                  </div>
+                  <p className="text-xs text-[var(--color-muted)] mt-1">
+                    {mt.time_limit} min · {mt.total_marks} questions · pass {mt.pass_marks}
+                    {!isUnlocked && " · Pass previous to unlock"}
+                  </p>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       <section className="ud-card p-6 mb-6">
         <h2 className="font-bold text-[var(--color-ink)]">What to expect</h2>
         <ul className="mt-3 space-y-2 text-sm text-[var(--color-ink-2)]">
           <li className="flex gap-2">
-            <span aria-hidden>⏱️</span> 45-minute timer in the corner. Mock exam
+            <span aria-hidden>⏱️</span> {Math.round(durationSeconds / 60)}-minute timer in the corner. Mock exam
             auto-submits when time is up.
           </li>
           <li className="flex gap-2">
-            <span aria-hidden>📋</span> 20 multiple-choice questions, balanced
+            <span aria-hidden>📋</span> {examSize} multiple-choice questions, balanced
             across chapters.
           </li>
           <li className="flex gap-2">
-            <span aria-hidden>🎯</span> Pass mark: 15 out of 20 (75%) — same as
+            <span aria-hidden>🎯</span> Pass mark: {passMarks} out of {examSize} ({Math.round((passMarks / examSize) * 100)}%) — same as
             the real test.
           </li>
           <li className="flex gap-2">

@@ -40,3 +40,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# sensitive data
+*.txt
+cookies.txt
+admin_cookies.txt
+dyn_cookies.txt
+test_cookie.txt
+test_cookies.txt
+

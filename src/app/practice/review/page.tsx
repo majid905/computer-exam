@@ -3,14 +3,22 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { QuizCard } from "@/components/app/QuizCard";
-import { getQuestionById } from "@/lib/content";
 import { useUserState, applyDailyStudy } from "@/lib/storage";
 import { ProgressBar } from "@/components/ui/Progress";
+import { RequireAuth } from "@/components/app/RequireAuth";
 import type { Question } from "@/lib/types";
 
 const REVIEW_KEY = "pc:review:ids";
 
 export default function PracticeReviewPage() {
+  return (
+    <RequireAuth>
+      <PracticeReviewInner />
+    </RequireAuth>
+  );
+}
+
+function PracticeReviewInner() {
   const [, update] = useUserState();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [answers, setAnswers] = useState<Record<string, { selected: number; correct: boolean }>>({});
@@ -19,10 +27,30 @@ export default function PracticeReviewPage() {
     try {
       const raw = sessionStorage.getItem(REVIEW_KEY);
       const ids = raw ? (JSON.parse(raw) as string[]) : [];
-      const qs = ids
-        .map((id) => getQuestionById(id))
-        .filter((q): q is Question => Boolean(q));
-      setQuestions(qs);
+      if (ids.length === 0) {
+        setQuestions([]);
+        return;
+      }
+      // Fetch all questions and filter by ids
+      fetch("/api/questions")
+        .then((r) => r.json())
+        .then((data) => {
+          const mapped: Question[] = data.map((q: any) => ({
+            id: String(q.id),
+            chapter: q.chapter_slug ?? "general",
+            topic: q.topic ?? "General",
+            difficulty: q.difficulty === "easy" ? 1 : q.difficulty === "medium" ? 2 : 3,
+            source: q.source ?? "Discover Canada",
+            question: q.question,
+            options: (q.options ?? []).map((o: any) => o.option_text),
+            answer: (q.options ?? []).findIndex((o: any) => o.is_correct === 1),
+            explanation: q.explanation,
+          }));
+          const qs = ids
+            .map((id) => mapped.find((q) => q.id === id))
+            .filter((q): q is Question => Boolean(q));
+          setQuestions(qs);
+        });
     } catch {
       setQuestions([]);
     }

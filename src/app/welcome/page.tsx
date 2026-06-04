@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 function Logo({ size = 28 }: { size?: number }) {
   return (
@@ -13,17 +13,31 @@ function Logo({ size = 28 }: { size?: number }) {
   );
 }
 
+function useSiteStats() {
+  const [stats, setStats] = useState({ questions: 0, chapters: 0, languages: 0, testimonials: 0, mock_test_duration: 45 });
+  useEffect(() => {
+    fetch("/api/site-stats")
+      .then((r) => r.json())
+      .then((data) => setStats(data))
+      .catch(() => {});
+  }, []);
+  return stats;
+}
+
 export default function WelcomePage() {
+  const stats = useSiteStats();
   return (
     <div className="min-h-screen bg-[var(--color-surface)]">
       <MarketingNav />
       <Hero />
-      <TrustStrip />
-      <Features />
-      <HowItWorks />
-      <SocialProof />
+      <TrustStrip stats={stats} />
+      <Features stats={stats} />
+      <HowItWorks stats={stats} />
+      <SocialProof stats={stats} />
       <Pricing />
+      <BlogSection />
       <FAQ />
+      <ContactSection />
       <FinalCTA />
       <MarketingFooter />
     </div>
@@ -60,6 +74,9 @@ function MarketingNav() {
           </a>
           <a href="#faq" className="hover:text-[var(--color-brand)]">
             FAQ
+          </a>
+          <a href="#contact" className="hover:text-[var(--color-brand)]">
+            Contact
           </a>
         </nav>
         <div className="flex items-center gap-2">
@@ -235,10 +252,10 @@ function HeroMockup() {
 
 /* ---------------- Trust strip ---------------- */
 
-function TrustStrip() {
+function TrustStrip({ stats }: { stats: any }) {
   const items = [
     "🇨🇦 IRCC 2026 online format",
-    "🌐 8 languages",
+    `🌐 ${stats.languages || 8} languages`,
     "📵 Works offline",
     "🚫 No dark patterns",
     "🔒 Privacy-first",
@@ -256,7 +273,7 @@ function TrustStrip() {
 
 /* ---------------- Features ---------------- */
 
-function Features() {
+function Features({ stats }: { stats: any }) {
   const features = [
     {
       title: "AI coach that knows when you're ready",
@@ -265,11 +282,11 @@ function Features() {
     },
     {
       title: "Faithful 2026 test simulation",
-      body: "45-minute timer. 20 questions balanced by topic and province. Question map, draft autosave, auto-submit. The closest thing to the real online test you'll find.",
+      body: `${stats.mock_test_duration || 45}-minute timer. 20 questions balanced by topic and province. Question map, draft autosave, auto-submit. The closest thing to the real online test you'll find.`,
       icon: "⏱",
     },
     {
-      title: "Explanations in 8 languages",
+      title: `Explanations in ${stats.languages || 8} languages`,
       body: "English, French, Punjabi, Tagalog, Mandarin, Hindi, Arabic, Spanish. Questions stay in EN/FR (because the real test is), but every explanation and glossary term is native.",
       icon: "🌐",
     },
@@ -328,7 +345,7 @@ function Features() {
 
 /* ---------------- How it works ---------------- */
 
-function HowItWorks() {
+function HowItWorks({ stats }: { stats: any }) {
   const steps = [
     {
       n: "01",
@@ -338,7 +355,7 @@ function HowItWorks() {
     {
       n: "02",
       title: "Study",
-      body: "12 chapters of Key Points authored for the test. Read in your language. Skim or go deep.",
+      body: `${stats.chapters || 12} chapters of Key Points authored for the test. Read in your language. Skim or go deep.`,
     },
     {
       n: "03",
@@ -403,18 +420,25 @@ function HowItWorks() {
 
 /* ---------------- Social proof ---------------- */
 
-function SocialProof() {
-  const stats = [
-    { v: "145", l: "Reviewed questions" },
-    { v: "12", l: "Study chapters" },
-    { v: "8", l: "Coach languages" },
-    { v: "45", l: "Minutes — real test format" },
+function SocialProof({ stats }: { stats: any }) {
+  const statItems = [
+    { v: stats.questions || 145, l: "Reviewed questions" },
+    { v: stats.chapters || 12, l: "Study chapters" },
+    { v: stats.languages || 8, l: "Coach languages" },
+    { v: stats.mock_test_duration || 45, l: "Minutes — real test format" },
   ];
+  const [testimonials, setTestimonials] = useState<any[]>([]);
+  useEffect(() => {
+    fetch("/api/testimonials")
+      .then((r) => r.json())
+      .then((data) => setTestimonials(data));
+  }, []);
+
   return (
     <section className="mx-auto max-w-6xl px-5 py-14 sm:py-16">
       <div className="ud-card p-8 sm:p-10 bg-[var(--color-brand)] text-white">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-          {stats.map((s) => (
+          {statItems.map((s) => (
             <div key={s.l}>
               <div className="text-3xl sm:text-4xl font-extrabold tracking-tight">
                 {s.v}
@@ -426,6 +450,26 @@ function SocialProof() {
           ))}
         </div>
       </div>
+      {testimonials.length > 0 && (
+        <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {testimonials.map((t) => (
+            <div key={t.id} className="ud-card p-6">
+              <p className="text-sm text-[var(--color-ink-2)] leading-relaxed italic">
+                "{t.review}"
+              </p>
+              <div className="mt-4 flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-[var(--color-brand-soft)] flex items-center justify-center text-[var(--color-brand)] font-bold">
+                  {t.name.charAt(0)}
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-[var(--color-ink)]">{t.name}</p>
+                  <p className="text-xs text-[var(--color-muted)]">{t.designation}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </section>
   );
 }
@@ -433,6 +477,13 @@ function SocialProof() {
 /* ---------------- Pricing ---------------- */
 
 function Pricing() {
+  const [plans, setPlans] = useState<any[]>([]);
+  useEffect(() => {
+    fetch("/api/pricing")
+      .then((r) => r.json())
+      .then((data) => setPlans(data));
+  }, []);
+
   return (
     <section id="pricing" className="mx-auto max-w-6xl px-5 py-16 sm:py-24">
       <div className="max-w-2xl">
@@ -448,76 +499,47 @@ function Pricing() {
         </p>
       </div>
       <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-5 max-w-4xl">
-        <div className="ud-card p-6 sm:p-8">
-          <div className="flex items-baseline justify-between">
-            <h3 className="text-xl font-extrabold tracking-tight">Free</h3>
-            <span className="text-3xl font-extrabold tabular-nums">$0</span>
-          </div>
-          <p className="text-sm text-[var(--color-muted)] mt-1">
-            Genuinely useful — not a teaser.
-          </p>
-          <ul className="mt-6 space-y-2.5 text-sm">
-            {[
-              "All 12 study chapters in Key Points",
-              "Full practice question bank (145 questions)",
-              "3 timed mock exams",
-              "Per-chapter mastery dashboard",
-              "Light and dark themes",
-            ].map((b) => (
-              <li key={b} className="flex gap-2">
-                <span className="text-[var(--color-success)]">✓</span>
-                {b}
-              </li>
-            ))}
-          </ul>
-          <Link
-            href="/onboarding"
-            className="ud-btn ud-btn-ghost mt-7 w-full"
+        {plans.map((plan, i) => (
+          <div
+            key={plan.id}
+            className={`ud-card p-6 sm:p-8 ${i === plans.length - 1 ? "border-[var(--color-brand)] relative" : ""}`}
+            style={i === plans.length - 1 ? { borderWidth: 2 } : {}}
           >
-            Start free
-          </Link>
-        </div>
-        <div
-          className="ud-card p-6 sm:p-8 border-[var(--color-brand)] relative"
-          style={{ borderWidth: 2 }}
-        >
-          <span className="absolute -top-3 left-6 ud-chip ud-chip-accent">
-            Recommended
-          </span>
-          <div className="flex items-baseline justify-between">
-            <h3 className="text-xl font-extrabold tracking-tight">Pro</h3>
-            <div className="text-right">
-              <div className="text-3xl font-extrabold tabular-nums">$9.99</div>
-              <div className="text-[11px] text-[var(--color-muted)] font-semibold">
-                one-time · or $4.99/mo
+            {i === plans.length - 1 && (
+              <span className="absolute -top-3 left-6 ud-chip ud-chip-accent">
+                Recommended
+              </span>
+            )}
+            <div className="flex items-baseline justify-between">
+              <h3 className="text-xl font-extrabold tracking-tight">{plan.title}</h3>
+              <div className="text-right">
+                <div className="text-3xl font-extrabold tabular-nums">
+                  ${(plan.price_cents / 100).toFixed(2)}
+                </div>
+                <div className="text-[11px] text-[var(--color-muted)] font-semibold">
+                  {plan.interval}
+                </div>
               </div>
             </div>
+            <p className="text-sm text-[var(--color-muted)] mt-1">
+              {plan.description}
+            </p>
+            <ul className="mt-6 space-y-2.5 text-sm">
+              {plan.features.map((b: string) => (
+                <li key={b} className="flex gap-2">
+                  <span className="text-[var(--color-success)]">✓</span>
+                  {b}
+                </li>
+              ))}
+            </ul>
+            <Link
+              href="/onboarding"
+              className={`ud-btn mt-7 w-full ${i === plans.length - 1 ? "ud-btn-primary" : "ud-btn-ghost"}`}
+            >
+              {i === plans.length - 1 ? "Start free, upgrade any time" : "Start free"}
+            </Link>
           </div>
-          <p className="text-sm text-[var(--color-muted)] mt-1">
-            Pass-rate insurance, in one tap.
-          </p>
-          <ul className="mt-6 space-y-2.5 text-sm">
-            {[
-              "Everything in Free",
-              "Unlimited mock exams",
-              "AI Coach explanations in 8 languages",
-              "Personalized study plan with pass-probability",
-              "Spaced-repetition review queue",
-              "Audio narration packs",
-            ].map((b) => (
-              <li key={b} className="flex gap-2">
-                <span className="text-[var(--color-success)]">✓</span>
-                {b}
-              </li>
-            ))}
-          </ul>
-          <Link
-            href="/onboarding"
-            className="ud-btn ud-btn-primary mt-7 w-full"
-          >
-            Start free, upgrade any time
-          </Link>
-        </div>
+        ))}
       </div>
     </section>
   );
@@ -526,32 +548,12 @@ function Pricing() {
 /* ---------------- FAQ ---------------- */
 
 function FAQ() {
-  const items = [
-    {
-      q: "Is passpilot affiliated with IRCC or the Government of Canada?",
-      a: "No. passpilot is an independent study aid by TechPlato, Inc. We are not affiliated with, endorsed by, or sponsored by IRCC. We link you to the official Discover Canada guide on canada.ca for source material.",
-    },
-    {
-      q: "Does this work for the new 2026 online test?",
-      a: "Yes — that's the whole point. Our mock exam uses the 2026 format: 20 questions in 45 minutes, pass at 15/20, with a full draft-autosave and auto-submit experience.",
-    },
-    {
-      q: "Which languages do you support?",
-      a: "The UI and explanations are available in English, French, Punjabi, Tagalog, Mandarin, Hindi, Arabic, and Spanish. The questions themselves stay in English (or French) because the real test does.",
-    },
-    {
-      q: "How much does it cost?",
-      a: "Free tier is real — full question bank, 3 mock exams, all explanations. The Pro tier is a clean $9.99 one-time unlock OR $4.99/month — you pick. No weekly subscriptions, no defaults, no surprises.",
-    },
-    {
-      q: "Do you offer a money-back guarantee?",
-      a: "A pass-or-money-back guarantee is on the V1.1 roadmap — we'll introduce it once we have real pass-rate data from launch users.",
-    },
-    {
-      q: "Will it work on my phone? On the plane?",
-      a: "Yes and yes. passpilot is a progressive web app: full question bank works offline once loaded; AI Coach explanations require connectivity but gracefully degrade to the static explanations.",
-    },
-  ];
+  const [items, setItems] = useState<{q: string; a: string}[]>([]);
+  useEffect(() => {
+    fetch("/api/faqs")
+      .then((r) => r.json())
+      .then((data) => setItems(data.map((f: any) => ({ q: f.question, a: f.answer }))));
+  }, []);
   const [openIdx, setOpenIdx] = useState<number | null>(0);
   return (
     <section
@@ -599,7 +601,253 @@ function FAQ() {
   );
 }
 
+/* ---------------- Contact ---------------- */
+
+function ContactSection() {
+  const [contact, setContact] = useState<any>(null);
+  const [form, setForm] = useState({ name: "", email: "", phone: "", subject: "", message: "" });
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+
+  useEffect(() => {
+    fetch("/api/site-contacts")
+      .then((r) => r.json())
+      .then((data) => setContact(data))
+      .catch(() => {});
+  }, []);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setStatus("loading");
+    try {
+      const res = await fetch("/api/contact-messages/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form, status: "new" }),
+      });
+      if (res.ok) {
+        setStatus("success");
+        setForm({ name: "", email: "", phone: "", subject: "", message: "" });
+      } else {
+        setStatus("error");
+      }
+    } catch {
+      setStatus("error");
+    }
+  }
+
+  const hasContact = contact && (contact.email || contact.phone || contact.address);
+
+  return (
+    <section id="contact" className="mx-auto max-w-6xl px-5 py-10 sm:py-16 border-t">
+      <div className="max-w-2xl mx-auto text-center">
+        <p className="text-xs font-bold uppercase tracking-wider text-[var(--color-accent)]">
+          Contact
+        </p>
+        <h2 className="mt-2 text-3xl sm:text-4xl font-extrabold tracking-tight text-[var(--color-ink)]">
+          Get in touch
+        </h2>
+        <p className="mt-3 text-[var(--color-muted)] leading-relaxed">
+          Have a question, feedback, or need support? Reach out to us.
+        </p>
+      </div>
+
+      <div className="mt-8 flex flex-col items-center gap-5">
+        {/* Contact Info Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full max-w-4xl">
+          {contact?.email && (
+            <div className="ud-card p-5 text-center">
+              <div className="text-2xl mb-2">✉️</div>
+              <h3 className="font-bold text-[var(--color-ink)] text-sm">Email</h3>
+              <a href={`mailto:${contact.email}`} className="text-sm text-[var(--color-brand)] hover:underline mt-1 block truncate">
+                {contact.email}
+              </a>
+            </div>
+          )}
+          {contact?.phone && (
+            <div className="ud-card p-5 text-center">
+              <div className="text-2xl mb-2">📞</div>
+              <h3 className="font-bold text-[var(--color-ink)] text-sm">Phone</h3>
+              <a href={`tel:${contact.phone}`} className="text-sm text-[var(--color-brand)] hover:underline mt-1 block">
+                {contact.phone}
+              </a>
+            </div>
+          )}
+          {contact?.address && (
+            <div className="ud-card p-5 text-center">
+              <div className="text-2xl mb-2">📍</div>
+              <h3 className="font-bold text-[var(--color-ink)] text-sm">Address</h3>
+              <p className="text-sm text-[var(--color-muted)] mt-1">{contact.address}</p>
+            </div>
+          )}
+          {contact?.whatsapp && (
+            <div className="ud-card p-5 text-center">
+              <div className="text-2xl mb-2">💬</div>
+              <h3 className="font-bold text-[var(--color-ink)] text-sm">WhatsApp</h3>
+              <a href={`https://wa.me/${contact.whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" className="text-sm text-[var(--color-brand)] hover:underline mt-1 block">
+                {contact.whatsapp}
+              </a>
+            </div>
+          )}
+        </div>
+
+        {/* Social Links */}
+        {hasContact && (
+          <div className="flex flex-wrap gap-2 justify-center">
+            {contact?.facebook && (
+              <a href={contact.facebook} target="_blank" rel="noopener noreferrer" className="ud-btn ud-btn-ghost ud-btn-sm">Facebook</a>
+            )}
+            {contact?.twitter && (
+              <a href={contact.twitter} target="_blank" rel="noopener noreferrer" className="ud-btn ud-btn-ghost ud-btn-sm">Twitter</a>
+            )}
+            {contact?.instagram && (
+              <a href={contact.instagram} target="_blank" rel="noopener noreferrer" className="ud-btn ud-btn-ghost ud-btn-sm">Instagram</a>
+            )}
+            {contact?.linkedin && (
+              <a href={contact.linkedin} target="_blank" rel="noopener noreferrer" className="ud-btn ud-btn-ghost ud-btn-sm">LinkedIn</a>
+            )}
+            {contact?.youtube && (
+              <a href={contact.youtube} target="_blank" rel="noopener noreferrer" className="ud-btn ud-btn-ghost ud-btn-sm">YouTube</a>
+            )}
+          </div>
+        )}
+
+        {/* Contact Form */}
+        <div className="ud-card p-6 w-full max-w-xl">
+          <h3 className="font-bold text-[var(--color-ink)] mb-4">Send us a message</h3>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-[var(--color-muted)] mb-1">Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={form.name}
+                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                  className="w-full rounded-md border-2 border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-ink)] focus:outline-none focus:border-[var(--color-brand)]"
+                  placeholder="Your name"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-[var(--color-muted)] mb-1">Email *</label>
+                <input
+                  type="email"
+                  required
+                  value={form.email}
+                  onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+                  className="w-full rounded-md border-2 border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-ink)] focus:outline-none focus:border-[var(--color-brand)]"
+                  placeholder="you@example.com"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-[var(--color-muted)] mb-1">Phone</label>
+                <input
+                  type="tel"
+                  value={form.phone}
+                  onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+                  className="w-full rounded-md border-2 border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-ink)] focus:outline-none focus:border-[var(--color-brand)]"
+                  placeholder="+1 234 567 8900"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-[var(--color-muted)] mb-1">Subject</label>
+                <input
+                  type="text"
+                  value={form.subject}
+                  onChange={(e) => setForm((f) => ({ ...f, subject: e.target.value }))}
+                  className="w-full rounded-md border-2 border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-ink)] focus:outline-none focus:border-[var(--color-brand)]"
+                  placeholder="How can we help?"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-[var(--color-muted)] mb-1">Message *</label>
+              <textarea
+                required
+                rows={4}
+                value={form.message}
+                onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))}
+                className="w-full rounded-md border-2 border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-ink)] focus:outline-none focus:border-[var(--color-brand)]"
+                placeholder="Tell us what's on your mind..."
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={status === "loading"}
+              className="ud-btn ud-btn-primary w-full"
+            >
+              {status === "loading" ? "Sending..." : "Send message"}
+            </button>
+            {status === "success" && (
+              <p className="text-sm text-[var(--color-success)] font-semibold">Message sent successfully! We&apos;ll be in touch soon.</p>
+            )}
+            {status === "error" && (
+              <p className="text-sm text-[var(--color-danger)] font-semibold">Something went wrong. Please try again.</p>
+            )}
+          </form>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /* ---------------- Final CTA ---------------- */
+
+function BlogSection() {
+  const [blogs, setBlogs] = useState<any[]>([]);
+  useEffect(() => {
+    fetch("/api/blogs")
+      .then((r) => r.json())
+      .then((data) => setBlogs(Array.isArray(data) ? data.slice(0, 3) : []))
+      .catch(() => {});
+  }, []);
+
+  if (blogs.length === 0) return null;
+
+  return (
+    <section className="mx-auto max-w-6xl px-5 py-16 sm:py-24 border-y bg-[var(--color-surface-2)]">
+      <div className="max-w-2xl">
+        <p className="text-xs font-bold uppercase tracking-wider text-[var(--color-accent)]">
+          From the blog
+        </p>
+        <h2 className="mt-2 text-3xl sm:text-4xl font-extrabold tracking-tight text-[var(--color-ink)]">
+          Tips, updates, and study guides.
+        </h2>
+      </div>
+      <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {blogs.map((b) => (
+          <Link
+            key={b.id}
+            href={`/blog/${b.slug}`}
+            className="ud-card p-5 hover:border-[var(--color-muted)] transition-colors block"
+          >
+            {b.image && (
+              <div className="h-40 rounded-md bg-[var(--color-surface-2)] overflow-hidden mb-4">
+                <img
+                  src={b.image}
+                  alt={b.title}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
+            <h3 className="font-extrabold tracking-tight text-[var(--color-ink)] leading-snug">
+              {b.title}
+            </h3>
+            {b.short_description && (
+              <p className="mt-2 text-sm text-[var(--color-muted)] leading-relaxed line-clamp-3">
+                {b.short_description}
+              </p>
+            )}
+            <span className="mt-4 inline-block text-xs font-bold text-[var(--color-brand)]">
+              Read more →
+            </span>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
 
 function FinalCTA() {
   return (
@@ -690,7 +938,7 @@ function MarketingFooter() {
               },
               { label: "Privacy", href: "#" },
               { label: "Terms", href: "#" },
-              { label: "Contact", href: "mailto:hello@passpilot.ca" },
+              { label: "Contact", href: "/contact" },
             ]}
           />
         </div>

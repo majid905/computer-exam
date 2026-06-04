@@ -1,13 +1,56 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 import { useUserState } from "@/lib/storage";
-import { chapters, CHAPTER_EMOJI } from "@/lib/content";
+import { CHAPTER_EMOJI } from "@/lib/content";
 import { ProgressBar } from "@/components/ui/Progress";
+import { RequireAuth } from "@/components/app/RequireAuth";
+import { formatTime } from "@/lib/exam";
+import type { Chapter, Question } from "@/lib/types";
 
 export default function ProgressPage() {
+  return (
+    <RequireAuth>
+      <ProgressPageInner />
+    </RequireAuth>
+  );
+}
+
+function ProgressPageInner() {
   const [state] = useUserState();
-  const attempts = state.attempts.slice(-10);
+  const [chapters, setChapters] = useState<Chapter[]>([]);
+  const [allQuestions, setAllQuestions] = useState<Question[]>([]);
+  const [reviewAttempt, setReviewAttempt] = useState<any | null>(null);
+
+  useEffect(() => {
+    fetch("/api/chapters")
+      .then((r) => r.json())
+      .then((data) => {
+        setChapters(
+          data.map((c: any) => ({ slug: c.slug, title: c.title, pageStart: 1, pageEnd: 10 })),
+        );
+      });
+    fetch("/api/questions")
+      .then((r) => r.json())
+      .then((data) => {
+        const mapped: Question[] = data.map((q: any) => ({
+          id: String(q.id),
+          chapter: q.chapter_slug ?? "general",
+          topic: q.topic ?? "General",
+          difficulty: q.difficulty === "easy" ? 1 : q.difficulty === "medium" ? 2 : 3,
+          source: q.source ?? "Discover Canada",
+          question: q.question,
+          options: (q.options ?? []).map((o: any) => o.option_text),
+          answer: (q.options ?? []).findIndex((o: any) => o.is_correct === 1),
+          explanation: q.explanation,
+        }));
+        setAllQuestions(mapped);
+      });
+  }, []);
+
+  const attempts = state.attempts.slice().reverse(); // newest first
+
   const studyableChapters = chapters.filter(
     (c) => c.slug !== "study" && c.slug !== "applying",
   );
@@ -22,6 +65,8 @@ export default function ProgressPage() {
     return total ? Math.round((correct / total) * 100) : 0;
   })();
 
+  const getQuestionById = (id: string) => allQuestions.find((q) => q.id === id);
+
   return (
     <div className="mx-auto max-w-4xl px-5 py-8 sm:py-10">
       <header className="mb-6">
@@ -29,7 +74,7 @@ export default function ProgressPage() {
           Progress
         </p>
         <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight mt-1">
-          How you're tracking
+          How you&apos;re tracking
         </h1>
       </header>
 
@@ -42,10 +87,10 @@ export default function ProgressPage() {
 
       <section className="ud-card p-6 mb-8">
         <h2 className="font-extrabold text-[var(--color-ink)]">
-          Recent mock exam scores
+          Mock exam history
         </h2>
         <p className="text-sm text-[var(--color-muted)] mb-4">
-          Pass mark: 15 / 20. Last 10 attempts.
+          Review your past attempts.
         </p>
         {attempts.length === 0 ? (
           <div className="text-center py-10">
@@ -57,7 +102,85 @@ export default function ProgressPage() {
             </Link>
           </div>
         ) : (
-          <ScoreChart attempts={attempts} />
+          <ul className="space-y-3">
+            {attempts.map((a, idx) => (
+              <li key={a.id} className="flex items-center gap-3 ud-card p-4">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`ud-chip ${a.passed ? "ud-chip-success" : "ud-chip-danger"}`}
+                    >
+                      {a.passed ? "Passed" : "Did not pass"}
+                    </span>
+                    <span className="text-sm text-[var(--color-muted)]">
+                      {a.score} / {a.total} · {formatTime(a.durationSeconds)} ·{" "}
+                      {new Date(a.finishedAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  className="ud-btn ud-btn-secondary ud-btn-sm"
+                  onClick={() => setReviewAttempt(reviewAttempt?.id === a.id ? null : a)}
+                >
+                  {reviewAttempt?.id === a.id ? "Hide" : "Review"}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {reviewAttempt && (
+          <div className="mt-6 space-y-4">
+            <h3 className="font-bold text-[var(--color-ink)]">
+              Review — {new Date(reviewAttempt.finishedAt).toLocaleDateString()}
+            </h3>
+            {reviewAttempt.answers.map((ans: any, i: number) => {
+              const q = getQuestionById(ans.qid);
+              if (!q) return null;
+              return (
+                <div key={ans.qid} className="ud-card p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-bold tracking-wide text-[var(--color-muted)]">
+                      Q{i + 1}
+                    </span>
+                    <span
+                      className={`ud-chip ${ans.correct ? "ud-chip-success" : "ud-chip-danger"}`}
+                    >
+                      {ans.correct ? "Correct" : "Incorrect"}
+                    </span>
+                  </div>
+                  <p className="font-bold text-[var(--color-ink)]">{q.question}</p>
+                  <ul className="mt-2 space-y-1 text-sm">
+                    {q.options.map((opt, idx) => {
+                      const isAnswer = idx === q.answer;
+                      const isUserPick = idx === ans.selected;
+                      return (
+                        <li
+                          key={idx}
+                          className={[
+                            "flex items-start gap-2 p-2 rounded-md",
+                            isAnswer
+                              ? "bg-[var(--color-success-soft)] text-[var(--color-success)]"
+                              : isUserPick
+                                ? "bg-[var(--color-danger-soft)] text-[var(--color-danger)]"
+                                : "text-[var(--color-ink-2)]",
+                          ].join(" ")}
+                        >
+                          <span aria-hidden>
+                            {isAnswer ? "✓" : isUserPick ? "✗" : "·"}
+                          </span>
+                          <span>{opt}</span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                  <p className="text-sm text-[var(--color-muted)] mt-2 leading-relaxed">
+                    {q.explanation}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
         )}
       </section>
 
@@ -114,36 +237,6 @@ function BigStat({ label, value }: { label: string; value: string }) {
       <div className="text-2xl font-extrabold text-[var(--color-ink)] mt-1">
         {value}
       </div>
-    </div>
-  );
-}
-
-function ScoreChart({
-  attempts,
-}: {
-  attempts: { score: number; total: number; finishedAt: string; passed: boolean }[];
-}) {
-  const max = 20;
-  return (
-    <div className="flex items-end gap-2 h-40 mt-2">
-      {attempts.map((a, i) => {
-        const h = Math.max(6, (a.score / max) * 100);
-        return (
-          <div key={i} className="flex-1 flex flex-col items-center gap-1">
-            <div
-              className={[
-                "w-full rounded-t-md",
-                a.passed ? "bg-[var(--color-success)]" : "bg-[var(--color-danger)]",
-              ].join(" ")}
-              style={{ height: `${h}%` }}
-              title={`${a.score}/${a.total} on ${new Date(a.finishedAt).toLocaleDateString()}`}
-            />
-            <span className="text-[10px] font-bold tabular-nums text-[var(--color-muted)]">
-              {a.score}
-            </span>
-          </div>
-        );
-      })}
     </div>
   );
 }

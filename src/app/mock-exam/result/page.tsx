@@ -4,16 +4,57 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useUserState } from "@/lib/storage";
-import { chapters, CHAPTER_EMOJI, getQuestionById } from "@/lib/content";
+import { CHAPTER_EMOJI } from "@/lib/content";
 import { ProgressBar } from "@/components/ui/Progress";
-import { formatTime, MOCK_EXAM_PASS, MOCK_EXAM_SIZE } from "@/lib/exam";
+import { formatTime } from "@/lib/exam";
+import { RequireAuth } from "@/components/app/RequireAuth";
+import type { Question } from "@/lib/types";
 
 const REVIEW_KEY = "pc:review:ids";
 
 export default function MockExamResultPage() {
+  return (
+    <RequireAuth>
+      <MockExamResultInner />
+    </RequireAuth>
+  );
+}
+
+function MockExamResultInner() {
   const router = useRouter();
   const [state] = useUserState();
   const [reviewing, setReviewing] = useState(false);
+  const [allQuestions, setAllQuestions] = useState<Question[]>([]);
+  const [chapters, setChapters] = useState<Record<string, { title: string; slug: string }>>({});
+
+  useEffect(() => {
+    fetch("/api/questions")
+      .then((r) => r.json())
+      .then((data) => {
+        const mapped: Question[] = data.map((q: any) => ({
+          id: String(q.id),
+          chapter: q.chapter_slug ?? "general",
+          topic: q.topic ?? "General",
+          difficulty: q.difficulty === "easy" ? 1 : q.difficulty === "medium" ? 2 : 3,
+          source: q.source ?? "Discover Canada",
+          question: q.question,
+          options: (q.options ?? []).map((o: any) => o.option_text),
+          answer: (q.options ?? []).findIndex((o: any) => o.is_correct === 1),
+          explanation: q.explanation,
+        }));
+        setAllQuestions(mapped);
+      });
+
+    fetch("/api/chapters")
+      .then((r) => r.json())
+      .then((data) => {
+        const map: Record<string, { title: string; slug: string }> = {};
+        for (const c of data) {
+          map[c.slug] = { title: c.title, slug: c.slug };
+        }
+        setChapters(map);
+      });
+  }, []);
 
   const attempt = useMemo(() => {
     if (typeof window === "undefined") return null;
@@ -25,11 +66,9 @@ export default function MockExamResultPage() {
     return state.attempts[state.attempts.length - 1] ?? null;
   }, [state.attempts]);
 
-  useEffect(() => {
-    if (!attempt && typeof window !== "undefined") {
-      // No attempt to show — go back
-    }
-  }, [attempt]);
+  const getQuestionById = (id: string): Question | undefined => {
+    return allQuestions.find((q) => q.id === id);
+  };
 
   if (!attempt) {
     return (
@@ -75,7 +114,7 @@ export default function MockExamResultPage() {
         </div>
         <ProgressBar value={attempt.score} max={attempt.total} />
         <p className="text-xs text-[var(--color-muted)] mt-2">
-          Pass mark: {MOCK_EXAM_PASS} / {MOCK_EXAM_SIZE} (75%)
+          Pass mark: {attempt.passMarks} / {attempt.total} ({Math.round((attempt.passMarks / attempt.total) * 100)}%)
         </p>
       </section>
 
@@ -84,15 +123,15 @@ export default function MockExamResultPage() {
           By chapter
         </h2>
         <ul className="space-y-3">
-          {chapters
-            .filter((c) => attempt.byChapter[c.slug])
-            .map((c) => {
-              const r = attempt.byChapter[c.slug];
+          {Object.entries(attempt.byChapter)
+            .map(([slug, r]) => {
+              const c = chapters[slug];
+              if (!c) return null;
               const pct = r.total ? Math.round((r.correct / r.total) * 100) : 0;
               return (
-                <li key={c.slug} className="flex items-center gap-3">
+                <li key={slug} className="flex items-center gap-3">
                   <span className="text-xl" aria-hidden>
-                    {CHAPTER_EMOJI[c.slug] ?? "📖"}
+                    {CHAPTER_EMOJI[slug] ?? "📖"}
                   </span>
                   <div className="flex-1">
                     <div className="flex items-center justify-between text-sm font-bold">
@@ -104,7 +143,7 @@ export default function MockExamResultPage() {
                     <ProgressBar value={pct} />
                   </div>
                   <Link
-                    href={`/practice/${c.slug}`}
+                    href={`/practice/${slug}`}
                     className="ud-btn ud-btn-ghost ud-btn-sm"
                   >
                     Drill

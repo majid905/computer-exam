@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUserState } from "@/lib/storage";
-import { chapters, CHAPTER_EMOJI, getQuestionsForChapter } from "@/lib/content";
+import { CHAPTER_EMOJI } from "@/lib/content";
 import { ProgressBar } from "@/components/ui/Progress";
+import { RequireAuth } from "@/components/app/RequireAuth";
+import type { Chapter } from "@/lib/types";
 
 function daysUntil(dateISO: string): number {
   const t = new Date(dateISO).getTime();
@@ -16,20 +18,52 @@ function daysUntil(dateISO: string): number {
 }
 
 export default function Dashboard() {
+  return (
+    <RequireAuth>
+      <DashboardInner />
+    </RequireAuth>
+  );
+}
+
+function DashboardInner() {
   const router = useRouter();
   const [state, , hydrated] = useUserState();
+  const [chapters, setChapters] = useState<Chapter[]>([]);
+  const [questionCounts, setQuestionCounts] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    fetch("/api/chapters")
+      .then((r) => r.json())
+      .then((data) => {
+        const mapped: Chapter[] = data.map((c: any) => ({
+          slug: c.slug,
+          title: c.title,
+          pageStart: 1,
+          pageEnd: 10,
+        }));
+        setChapters(mapped);
+        Promise.all(
+          mapped.map(async (ch) => {
+            const res = await fetch(`/api/chapters/${ch.slug}`);
+            const d = await res.json();
+            return { slug: ch.slug, count: d.questions?.length ?? 0 };
+          }),
+        ).then((counts) => {
+          setQuestionCounts(Object.fromEntries(counts.map((c) => [c.slug, c.count])));
+        });
+      });
+  }, []);
 
   useEffect(() => {
     if (!hydrated) return;
     if (!state.onboarding.completed) {
-      // Send anonymous visitors to the marketing site.
-      router.replace("/");
+      router.replace("/onboarding");
     }
   }, [hydrated, state.onboarding.completed, router]);
 
   const studyChapters = useMemo(
     () => chapters.filter((c) => c.slug !== "study" && c.slug !== "applying"),
-    [],
+    [chapters],
   );
 
   const continueChapter = useMemo(() => {
@@ -44,7 +78,7 @@ export default function Dashboard() {
       }
     }
     return bestSlug ? chapters.find((c) => c.slug === bestSlug) : null;
-  }, [state.chapters]);
+  }, [state.chapters, chapters]);
 
   const weakestChapter = useMemo(() => {
     const tried = studyChapters
@@ -154,15 +188,15 @@ export default function Dashboard() {
           color="brand"
         />
         <ActionCard
-          href={`/practice/${weakestChapter.slug}`}
+          href={weakestChapter ? `/practice/${weakestChapter.slug}` : "/practice"}
           title="Drill your weakest"
-          subtitle={`${weakestChapter.title} — explanations & citations`}
+          subtitle={weakestChapter ? `${weakestChapter.title} — explanations & citations` : "Pick a chapter to practice"}
           color="info"
         />
         <ActionCard
           href="/mock-exam"
           title="Simulate the test"
-          subtitle="45-minute timer, 20 questions, pass at 15"
+          subtitle="Full mock exam with timer and balanced questions"
           color="warning"
         />
       </section>
@@ -185,7 +219,7 @@ export default function Dashboard() {
         <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {studyChapters.map((c) => {
             const cp = state.chapters[c.slug];
-            const qs = getQuestionsForChapter(c.slug).length;
+            const qs = questionCounts[c.slug] ?? 0;
             const mastery =
               cp && cp.practiceTotal > 0
                 ? Math.round((cp.practiceCorrect / cp.practiceTotal) * 100)

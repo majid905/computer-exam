@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useUserState, applyDailyStudy } from "@/lib/storage";
+import { useAuth } from "@/context/AuthContext";
 import {
   MOCK_EXAM_DURATION_SECONDS,
   MOCK_EXAM_PASS,
@@ -10,8 +11,11 @@ import {
   formatTime,
   pickMockExamQuestions,
   scoreAttempt,
+  shuffle,
 } from "@/lib/exam";
 import { CHAPTER_EMOJI } from "@/lib/content";
+import { RequireAuth } from "@/components/app/RequireAuth";
+import type { Question } from "@/lib/types";
 
 const DRAFT_KEY = "pc:mock:draft:v1";
 
@@ -19,6 +23,16 @@ type Draft = {
   startedAt: string;
   questionIds: string[];
   selected: Record<string, number | null>;
+};
+
+type MockTest = {
+  id: number;
+  title: string;
+  time_limit: number;
+  total_marks: number;
+  pass_marks: number;
+  total_questions: number;
+  question_selection_mode: string;
 };
 
 function loadDraft(): Draft | null {
@@ -43,21 +57,116 @@ function clearDraft() {
 }
 
 export default function MockExamTakePage() {
+  return (
+    <RequireAuth>
+      <MockExamTakeInner />
+    </RequireAuth>
+  );
+}
+
+function MockExamTakeInner() {
   const router = useRouter();
   const [, update] = useUserState();
+  const { user } = useAuth();
+  const [allQuestions, setAllQuestions] = useState<Question[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [mockTest, setMockTest] = useState<MockTest | null>(null);
 
-  const [examQuestions] = useState(() => {
+  useEffect(() => {
+    const activeMockId = sessionStorage.getItem("pc:activeMockId");
+    setLoading(true);
+
+    fetch("/api/mock-tests")
+      .then((r) => r.json())
+      .then(async (data) => {
+        const tests = Array.isArray(data) ? data : [];
+        const target = activeMockId
+          ? tests.find((t: any) => String(t.id) === activeMockId)
+          : tests[0];
+        setMockTest(target ?? null);
+
+        let mapped: Question[] = [];
+
+        if (target) {
+          // Fetch assigned questions for this mock test
+          const detailRes = await fetch(`/api/mock-tests/${target.id}/`);
+          const detail = await detailRes.json();
+          const assigned = (detail.questions ?? []).map((q: any) => ({
+            id: String(q.id),
+            chapter: q.chapter_slug ?? q.chapter ?? "general",
+            topic: q.topic ?? "General",
+            difficulty: q.difficulty === "easy" ? 1 : q.difficulty === "medium" ? 2 : 3,
+            source: q.source ?? "Discover Canada",
+            question: q.question,
+            options: (q.options ?? []).map((o: any) => typeof o === "string" ? o : o.option_text),
+            answer: (q.options ?? []).findIndex((o: any) => o.is_correct === 1),
+            explanation: q.explanation,
+          }));
+          if (assigned.length > 0) {
+            mapped = assigned;
+          }
+        }
+
+        // Fallback: load all questions if no assigned questions
+        if (mapped.length === 0) {
+          const qRes = await fetch("/api/questions");
+          const qData = await qRes.json();
+          mapped = qData.map((q: any) => ({
+            id: String(q.id),
+            chapter: q.chapter_slug ?? "general",
+            topic: q.topic ?? "General",
+            difficulty: q.difficulty === "easy" ? 1 : q.difficulty === "medium" ? 2 : 3,
+            source: q.source ?? "Discover Canada",
+            question: q.question,
+            options: (q.options ?? []).map((o: any) => typeof o === "string" ? o : o.option_text),
+            answer: (q.options ?? []).findIndex((o: any) => o.is_correct === 1),
+            explanation: q.explanation,
+          }));
+        }
+
+        setAllQuestions(mapped);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  const [examQs, setExamQs] = useState<Question[]>([]);
+
+  const config = useMemo(() => {
+    const size = mockTest?.total_questions ?? mockTest?.total_marks ?? MOCK_EXAM_SIZE;
+    const pass = mockTest?.pass_marks ?? MOCK_EXAM_PASS;
+    const duration = (mockTest?.time_limit ?? MOCK_EXAM_DURATION_SECONDS / 60) * 60;
+    return { size, pass, duration };
+  }, [mockTest]);
+
+  useEffect(() => {
+    if (allQuestions.length === 0) return;
     const draft = loadDraft();
+
+    let picked: Question[];
+    const isAssignedPool = mockTest && (
+      mockTest.question_selection_mode === "manual" ||
+      allQuestions.length <= (mockTest.total_questions || 0)
+    );
+
+    if (isAssignedPool) {
+      picked = shuffle(allQuestions).slice(0, Math.min(config.size, allQuestions.length));
+    } else {
+      picked = pickMockExamQuestions(allQuestions, config.size);
+    }
+
     if (draft) {
-      const all = pickMockExamQuestions(MOCK_EXAM_SIZE * 2);
-      const byId = new Map(all.map((q) => [q.id, q]));
+      const byId = new Map(allQuestions.map((q) => [q.id, q]));
       const restored = draft.questionIds
         .map((id) => byId.get(id))
-        .filter(Boolean) as ReturnType<typeof pickMockExamQuestions>;
-      if (restored.length === MOCK_EXAM_SIZE) return restored;
+        .filter(Boolean) as Question[];
+      if (restored.length === picked.length) {
+        setExamQs(restored);
+        return;
+      }
     }
-    return pickMockExamQuestions();
-  });
+    setExamQs(picked);
+  }, [allQuestions, config.size, mockTest]);
 
   const [startedAt] = useState<Date>(() => {
     const draft = loadDraft();
@@ -81,17 +190,18 @@ export default function MockExamTakePage() {
   }, []);
 
   const elapsed = Math.floor((now - startedAt.getTime()) / 1000);
-  const remaining = Math.max(0, MOCK_EXAM_DURATION_SECONDS - elapsed);
+  const remaining = Math.max(0, config.duration - elapsed);
   const timeLow = remaining <= 60;
 
   // persist draft on change
   useEffect(() => {
+    if (examQs.length === 0) return;
     saveDraft({
       startedAt: startedAt.toISOString(),
-      questionIds: examQuestions.map((q) => q.id),
+      questionIds: examQs.map((q) => q.id),
       selected,
     });
-  }, [selected, startedAt, examQuestions]);
+  }, [selected, startedAt, examQs]);
 
   const answeredCount = Object.values(selected).filter((v) => v !== null).length;
 
@@ -100,12 +210,20 @@ export default function MockExamTakePage() {
     if (submitting) return;
     setSubmitting(true);
     const finishedAt = new Date();
-    const attempt = scoreAttempt(selected, examQuestions, startedAt, finishedAt);
+    const attempt = scoreAttempt(selected, examQs, startedAt, finishedAt, {
+      size: config.size,
+      pass: config.pass,
+      durationSeconds: config.duration,
+    });
+    const correctCount = attempt.score;
+    const wrongCount = attempt.total - attempt.score;
+    const timeTaken = Math.floor((finishedAt.getTime() - startedAt.getTime()) / 1000);
+
     update((s) => {
       const next = applyDailyStudy(s);
       const ch = { ...next.chapters };
       for (const a of attempt.answers) {
-        const q = examQuestions.find((x) => x.id === a.qid);
+        const q = examQs.find((x) => x.id === a.qid);
         if (!q) continue;
         const cp = ch[q.chapter] ?? {
           read: false,
@@ -125,6 +243,31 @@ export default function MockExamTakePage() {
         attempts: [...next.attempts, attempt],
       };
     });
+
+    // Save to database
+    fetch("/api/test-attempts/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        user_id: user?.id,
+        mock_test_id: mockTest?.id ?? 1,
+        score: attempt.total,
+        total_marks: attempt.total,
+        correct_answers: correctCount,
+        wrong_answers: wrongCount,
+        time_taken: timeTaken,
+        result: attempt.passed ? "pass" : "fail",
+        answers: examQs.map((q) => {
+          const sel = selected[q.id] ?? null;
+          return {
+            question_id: Number(q.id),
+            selected_option: sel,
+            is_correct: sel !== null && sel === q.answer,
+          };
+        }),
+      }),
+    }).catch(() => {});
+
     clearDraft();
     sessionStorage.setItem("pc:lastAttemptId", attempt.id);
     router.replace("/mock-exam/result");
@@ -132,19 +275,27 @@ export default function MockExamTakePage() {
 
   // auto-submit on timeout
   useEffect(() => {
-    if (remaining <= 0 && !submitting) {
+    if (remaining <= 0 && !submitting && examQs.length > 0) {
       submitRef.current();
     }
-  }, [remaining, submitting]);
+  }, [remaining, submitting, examQs.length]);
 
-  const currentQ = examQuestions[active];
-  const allAnswered = answeredCount === examQuestions.length;
+  const currentQ = examQs[active];
+  const allAnswered = answeredCount === examQs.length;
 
   const flaggedIndices = useMemo(() => {
-    return examQuestions
+    return examQs
       .map((q, i) => (selected[q.id] == null ? i : -1))
       .filter((i) => i !== -1);
-  }, [examQuestions, selected]);
+  }, [examQs, selected]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[var(--color-surface-2)] flex items-center justify-center">
+        <p className="text-[var(--color-muted)]">Loading exam questions...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[var(--color-surface-2)] flex flex-col">
@@ -155,8 +306,13 @@ export default function MockExamTakePage() {
               Mock exam
             </p>
             <span className="ud-chip">
-              {answeredCount} / {examQuestions.length}
+              {answeredCount} / {examQs.length}
             </span>
+            {mockTest && (
+              <span className="ud-chip ud-chip-brand text-[10px]">
+                {mockTest.title}
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-3">
             <span
@@ -185,7 +341,7 @@ export default function MockExamTakePage() {
           <div className="ud-card p-6">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-bold tracking-wide text-[var(--color-muted)]">
-                QUESTION {active + 1} OF {examQuestions.length}
+                QUESTION {active + 1} OF {examQs.length}
               </span>
               <span className="ud-chip ud-chip-brand">
                 {CHAPTER_EMOJI[currentQ.chapter] ?? "📖"} {currentQ.topic}
@@ -249,11 +405,11 @@ export default function MockExamTakePage() {
               >
                 Clear
               </button>
-              {active < examQuestions.length - 1 ? (
+              {active < examQs.length - 1 ? (
                 <button
                   className="ud-btn ud-btn-primary ud-btn-sm"
                   onClick={() =>
-                    setActive((i) => Math.min(examQuestions.length - 1, i + 1))
+                    setActive((i) => Math.min(examQs.length - 1, i + 1))
                   }
                 >
                   Next →
@@ -275,7 +431,7 @@ export default function MockExamTakePage() {
             Question map
           </h3>
           <ol className="grid grid-cols-5 gap-2">
-            {examQuestions.map((q, i) => {
+            {examQs.map((q, i) => {
               const answered = selected[q.id] != null;
               const isActive = i === active;
               return (
@@ -304,7 +460,7 @@ export default function MockExamTakePage() {
                 {flaggedIndices.length}
               </strong>
             </p>
-            <p>Pass mark: {MOCK_EXAM_PASS} / {MOCK_EXAM_SIZE}</p>
+            <p>Pass mark: {config.pass} / {config.size}</p>
           </div>
           <button
             className="ud-btn ud-btn-primary ud-btn-sm w-full mt-4"
@@ -321,8 +477,8 @@ export default function MockExamTakePage() {
           body={
             allAnswered
               ? "Your score will be calculated and saved to your history."
-              : `You have ${examQuestions.length - answeredCount} unanswered question${
-                  examQuestions.length - answeredCount === 1 ? "" : "s"
+              : `You have ${examQs.length - answeredCount} unanswered question${
+                  examQs.length - answeredCount === 1 ? "" : "s"
                 }. They will be marked incorrect.`
           }
           confirmLabel="Submit"
