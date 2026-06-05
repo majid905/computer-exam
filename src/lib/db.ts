@@ -34,8 +34,13 @@ function db(): D1Database {
   return binding;
 }
 
+// D1 (unlike mysql2) rejects `undefined` bind values — coerce them to null.
+function sanitize(params: any[]): any[] {
+  return params.map((p) => (p === undefined ? null : p));
+}
+
 export async function query<T = any>(sql: string, params: any[] = []) {
-  const { results } = await db().prepare(sql).bind(...params).all<T>();
+  const { results } = await db().prepare(sql).bind(...sanitize(params)).all<T>();
   return (results ?? []) as T[];
 }
 
@@ -46,7 +51,7 @@ export interface ExecuteResult {
 }
 
 export async function execute(sql: string, params: any[] = []): Promise<ExecuteResult> {
-  const { meta } = await db().prepare(sql).bind(...params).run();
+  const { meta } = await db().prepare(sql).bind(...sanitize(params)).run();
   return {
     insertId: Number(meta?.last_row_id ?? 0),
     affectedRows: Number(meta?.changes ?? 0),

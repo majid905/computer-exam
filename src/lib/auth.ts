@@ -42,6 +42,20 @@ export async function getAuthUser(): Promise<{ userId: number; email: string; ro
   }
 }
 
+// Generate a URL-safe random token (hex). Uses Web Crypto (workerd-compatible).
+export function generateToken(bytes = 32): string {
+  const arr = new Uint8Array(bytes);
+  crypto.getRandomValues(arr);
+  return Array.from(arr, (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+// SHA-256 hex digest of a string (for storing reset tokens hashed, never raw).
+export async function sha256Hex(input: string): Promise<string> {
+  const data = new TextEncoder().encode(input);
+  const digest = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 export function unauthorizedResponse() {
   return Response.json({ error: "Unauthorized" }, { status: 401 });
 }

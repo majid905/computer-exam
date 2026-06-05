@@ -49,7 +49,7 @@ export default function WelcomePage() {
 function MarketingNav() {
   const [open, setOpen] = useState(false);
   return (
-    <header className="sticky top-0 z-30 backdrop-blur bg-[var(--color-surface)]/90 border-b">
+    <header className="sticky top-0 z-30 pp-glass">
       <div className="mx-auto max-w-6xl px-5 h-16 flex items-center justify-between">
         <Link href="/welcome" className="flex items-center gap-2">
           <Logo size={30} />
@@ -129,35 +129,49 @@ function MarketingNav() {
 function Hero() {
   return (
     <section className="relative overflow-hidden">
-      <div
-        aria-hidden
-        className="absolute inset-0 -z-10"
-        style={{
-          background:
-            "radial-gradient(60% 60% at 80% 0%, rgba(245,138,31,0.10), transparent 60%), radial-gradient(60% 60% at 0% 100%, rgba(46,42,138,0.10), transparent 60%)",
-        }}
-      />
-      <div className="mx-auto max-w-6xl px-5 py-14 sm:py-20 grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-        <div>
+      <div aria-hidden className="absolute inset-0 -z-10 pp-mesh" />
+      <div className="mx-auto max-w-6xl px-5 py-16 sm:py-24 grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+        <div className="pp-reveal">
           <span className="ud-chip ud-chip-accent">
             ✨ Built for the new 2026 IRCC online test
           </span>
-          <h1 className="mt-4 text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-[var(--color-ink)] leading-[1.05]">
+          <h1 className="mt-5 text-4xl sm:text-5xl lg:text-[3.75rem] font-extrabold tracking-tight text-[var(--color-ink)] leading-[1.04]">
             Pass the Canadian citizenship test on your{" "}
-            <span className="text-[var(--color-brand)]">first try</span>.
+            <span className="pp-gradient-text">first try</span>.
           </h1>
           <p className="mt-5 text-lg text-[var(--color-muted)] max-w-xl leading-relaxed">
             Study less. Pass with confidence. An AI-powered coach that tells you
             when you&apos;re ready, simulates the new 45-minute online format,
             and explains every wrong answer in your language.
           </p>
-          <div className="mt-7 flex flex-wrap gap-3">
+          <div className="mt-8 flex flex-wrap gap-3">
             <Link href="/onboarding" className="ud-btn ud-btn-primary">
               Start studying — it&apos;s free
             </Link>
             <a href="#how-it-works" className="ud-btn ud-btn-ghost">
               See how it works
             </a>
+          </div>
+          <div className="mt-7 flex items-center gap-3">
+            <div className="flex -space-x-2">
+              {["🇮🇳", "🇵🇭", "🇨🇳", "🇧🇷"].map((f, i) => (
+                <span
+                  key={i}
+                  className="h-9 w-9 rounded-full bg-[var(--color-surface)] border-2 border-[var(--color-surface)] shadow-sm flex items-center justify-center text-base"
+                  style={{ boxShadow: "var(--shadow-sm)" }}
+                >
+                  {f}
+                </span>
+              ))}
+            </div>
+            <div className="text-sm">
+              <div className="text-[var(--color-accent)] tracking-tight leading-none">
+                ★★★★★
+              </div>
+              <div className="text-xs text-[var(--color-muted)] font-semibold mt-1">
+                Loved by future Canadians from 30+ countries
+              </div>
+            </div>
           </div>
           <div className="mt-6 flex items-center gap-4 text-xs text-[var(--color-muted)]">
             <span className="flex items-center gap-1.5">
@@ -174,7 +188,7 @@ function Hero() {
             </span>
           </div>
         </div>
-        <div>
+        <div className="pp-reveal" style={{ animationDelay: "120ms" }}>
           <HeroMockup />
         </div>
       </div>
@@ -186,8 +200,8 @@ function HeroMockup() {
   return (
     <div className="relative">
       <div
-        className="ud-card p-5"
-        style={{ boxShadow: "0 18px 60px -20px rgba(46,42,138,0.25)" }}
+        className="ud-card pp-lift p-5"
+        style={{ boxShadow: "var(--shadow-lg), 0 30px 70px -28px rgba(46,42,138,0.35)" }}
       >
         <div className="flex items-center justify-between text-xs text-[var(--color-muted)] font-bold mb-3">
           <span>QUESTION 7 OF 20</span>
@@ -322,12 +336,8 @@ function Features({ stats }: { stats: any }) {
       </div>
       <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {features.map((f) => (
-          <div key={f.title} className="ud-card p-6 h-full">
-            <div
-              aria-hidden
-              className="h-11 w-11 rounded-md flex items-center justify-center text-xl"
-              style={{ background: "var(--color-brand-soft)" }}
-            >
+          <div key={f.title} className="ud-card pp-lift p-6 h-full">
+            <div aria-hidden className="pp-icon-tile">
               {f.icon}
             </div>
             <h3 className="mt-4 font-extrabold tracking-tight text-[var(--color-ink)]">
@@ -384,8 +394,8 @@ function HowItWorks({ stats }: { stats: any }) {
         </div>
         <ol className="mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
           {steps.map((s, i) => (
-            <li key={s.n} className="ud-card p-6 relative">
-              <div className="text-[40px] font-extrabold leading-none text-[var(--color-brand-soft)] tabular-nums">
+            <li key={s.n} className="ud-card pp-lift p-6 relative">
+              <div className="text-[44px] font-extrabold leading-none pp-gradient-text tabular-nums">
                 {s.n}
               </div>
               <h3 className="mt-3 font-extrabold tracking-tight text-[var(--color-ink)]">
@@ -436,7 +446,7 @@ function SocialProof({ stats }: { stats: any }) {
 
   return (
     <section className="mx-auto max-w-6xl px-5 py-14 sm:py-16">
-      <div className="ud-card p-8 sm:p-10 bg-[var(--color-brand)] text-white">
+      <div className="ud-card pp-shine pp-glow p-8 sm:p-10 text-white">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
           {statItems.map((s) => (
             <div key={s.l}>
@@ -453,7 +463,10 @@ function SocialProof({ stats }: { stats: any }) {
       {testimonials.length > 0 && (
         <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {testimonials.map((t) => (
-            <div key={t.id} className="ud-card p-6">
+            <div key={t.id} className="ud-card pp-lift p-6">
+              <div className="text-[var(--color-accent)] text-sm tracking-tight mb-3">
+                ★★★★★
+              </div>
               <p className="text-sm text-[var(--color-ink-2)] leading-relaxed italic">
                 "{t.review}"
               </p>
@@ -502,7 +515,7 @@ function Pricing() {
         {plans.map((plan, i) => (
           <div
             key={plan.id}
-            className={`ud-card p-6 sm:p-8 ${i === plans.length - 1 ? "border-[var(--color-brand)] relative" : ""}`}
+            className={`ud-card pp-lift p-6 sm:p-8 ${i === plans.length - 1 ? "border-[var(--color-brand)] relative pp-glow" : ""}`}
             style={i === plans.length - 1 ? { borderWidth: 2 } : {}}
           >
             {i === plans.length - 1 && (
@@ -653,7 +666,7 @@ function ContactSection() {
 
       <div className="mt-8 flex flex-col items-center gap-5">
         {/* Contact Info Cards */}
-        <div className="gap-4 mx-auto d-flex">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full max-w-4xl">
           {contact?.email && (
             <div className="ud-card p-5 text-center">
               <div className="text-2xl mb-2">✉️</div>
@@ -820,7 +833,7 @@ function BlogSection() {
           <Link
             key={b.id}
             href={`/blog/${b.slug}`}
-            className="ud-card p-5 hover:border-[var(--color-muted)] transition-colors block"
+            className="ud-card pp-lift p-5 block"
           >
             {b.image && (
               <div className="h-40 rounded-md bg-[var(--color-surface-2)] overflow-hidden mb-4">
@@ -852,22 +865,16 @@ function BlogSection() {
 function FinalCTA() {
   return (
     <section className="mx-auto max-w-6xl px-5 py-16 sm:py-24">
-      <div
-        className="ud-card p-8 sm:p-12 text-center"
-        style={{
-          background:
-            "linear-gradient(135deg, var(--color-brand) 0%, #1a1660 100%)",
-          color: "#ffffff",
-        }}
-      >
-        <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
+      <div className="ud-card pp-shine pp-glow relative overflow-hidden p-8 sm:p-14 text-center text-white">
+        <div aria-hidden className="absolute inset-0 -z-0 pp-mesh opacity-40" />
+        <h2 className="relative text-3xl sm:text-5xl font-extrabold tracking-tight">
           Ready to become Canadian?
         </h2>
-        <p className="mt-3 text-white/85 max-w-xl mx-auto">
+        <p className="relative mt-4 text-white/85 max-w-xl mx-auto text-lg">
           Join the studiers who walk into the test calm, prepared, and
           confident. It&apos;s free to start. No card. No catch.
         </p>
-        <div className="mt-7 flex justify-center gap-3 flex-wrap">
+        <div className="relative mt-8 flex justify-center gap-3 flex-wrap">
           <Link href="/onboarding" className="ud-btn ud-btn-accent">
             Start studying — it&apos;s free
           </Link>

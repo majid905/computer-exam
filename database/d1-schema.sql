@@ -415,3 +415,14 @@ CREATE TABLE `stripe_configs` (
   `created_at` TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+DROP TABLE IF EXISTS `password_resets`;
+CREATE TABLE `password_resets` (
+  `id` INTEGER PRIMARY KEY AUTOINCREMENT,
+  `email` TEXT NOT NULL,
+  `token_hash` TEXT NOT NULL,
+  `expires_at` TEXT NOT NULL,
+  `created_at` TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS `idx_password_resets_email` ON `password_resets` (`email`);
+CREATE INDEX IF NOT EXISTS `idx_password_resets_token` ON `password_resets` (`token_hash`);

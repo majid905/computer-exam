@@ -7,6 +7,8 @@ const PUBLIC_PATHS = [
   "/welcome",
   "/login",
   "/register",
+  "/forgot-password",
+  "/reset-password",
   "/onboarding",
   "/chapters",
   "/study",
@@ -24,6 +26,8 @@ const PUBLIC_PATHS = [
 const PUBLIC_API_PATHS = [
   "/api/auth/login",
   "/api/auth/register",
+  "/api/auth/forgot-password",
+  "/api/auth/reset-password",
   "/api/faqs",
   "/api/languages",
   "/api/provinces",

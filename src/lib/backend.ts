@@ -1937,3 +1937,33 @@ export async function getPracticeQuestionsWithOptions(chapterId?: number) {
   }
   return result;
 }
+
+// ===================== PASSWORD RESETS =====================
+
+export async function updateUserPassword(id: number, passwordHash: string) {
+  await execute(`UPDATE users SET password = ? WHERE id = ?`, [passwordHash, id]);
+}
+
+export async function createPasswordReset(email: string, tokenHash: string, expiresAt: string) {
+  // Invalidate any prior tokens for this email, then store the new one.
+  await execute(`DELETE FROM password_resets WHERE email = ?`, [email]);
+  await execute(
+    `INSERT INTO password_resets (email, token_hash, expires_at) VALUES (?, ?, ?)`,
+    [email, tokenHash, expiresAt],
+  );
+}
+
+// Returns the matching, unexpired reset row (or null). `nowStr` is the current
+// time formatted as 'YYYY-MM-DD HH:MM:SS' for lexicographic comparison.
+export async function getValidPasswordReset(email: string, tokenHash: string, nowStr: string) {
+  const rows = await query<{ id: number; email: string; expires_at: string }>(
+    `SELECT id, email, expires_at FROM password_resets
+     WHERE email = ? AND token_hash = ? AND expires_at > ? LIMIT 1`,
+    [email, tokenHash, nowStr],
+  );
+  return rows[0] || null;
+}
+
+export async function deletePasswordResetsForEmail(email: string) {
+  await execute(`DELETE FROM password_resets WHERE email = ?`, [email]);
+}

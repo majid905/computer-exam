@@ -9,6 +9,13 @@
     { "pattern": "www.passpilot.ca", "custom_domain": true }
   ],
   "workers_dev": true,
+  // Stripe Price IDs (non-secret). Fill in from `node scripts/stripe-setup.js`.
+  // Stripe secret/webhook keys are set via `wrangler secret put`, not here.
+  "vars": {
+    "STRIPE_PRICE_PRO_MONTHLY": "price_1TefM2PvOTDjFLJjctd6IkZo",
+    "STRIPE_PRICE_PRO_YEARLY": "price_1TefM3PvOTDjFLJjtnCn3THK",
+    "RESEND_FROM": "PassPilot <noreply@passpilot.ca>"
+  },
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
