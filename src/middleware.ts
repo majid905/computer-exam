@@ -43,6 +43,8 @@ const PUBLIC_API_PATHS = [
   "/api/categories",
   "/api/blog-categories",
   "/api/contact-messages",
+  "/api/site-contacts",
+  "/api/site-stats",
   "/api/stripe-webhook",
 ];
 
