@@ -11,7 +11,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Stripe not configured" }, { status: 400 });
     }
 
-    const stripe = new Stripe(stripeConfig.secret_key, { apiVersion: "2026-05-27.dahlia" });
+    // Workers runtime: use the Fetch HTTP client (default Node client hangs).
+    const stripe = new Stripe(stripeConfig.secret_key, {
+      apiVersion: "2026-05-27.dahlia",
+      httpClient: Stripe.createFetchHttpClient(),
+    });
     const payload = await request.text();
     const sig = request.headers.get("stripe-signature");
 
@@ -32,7 +36,15 @@ export async function POST(request: Request) {
       }
       const secret = webhookSecret || stripeConfig.secret_key;
       try {
-        event = stripe.webhooks.constructEvent(payload, sig, secret);
+        // Async + SubtleCrypto provider: required on Workers (sync constructEvent
+        // uses Node crypto, which isn't available in this runtime).
+        event = await stripe.webhooks.constructEventAsync(
+          payload,
+          sig,
+          secret,
+          undefined,
+          Stripe.createSubtleCryptoProvider(),
+        );
       } catch (err: any) {
         return NextResponse.json({ error: `Webhook error: ${err.message}` }, { status: 400 });
       }

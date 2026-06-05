@@ -27,7 +27,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Stripe is not configured" }, { status: 400 });
     }
 
-    const stripe = new Stripe(stripeConfig.secret_key, { apiVersion: "2026-05-27.dahlia" });
+    // On the Cloudflare Workers runtime the Stripe SDK must use the Fetch-based
+    // HTTP client; the default Node client cannot make outbound requests and hangs.
+    const stripe = new Stripe(stripeConfig.secret_key, {
+      apiVersion: "2026-05-27.dahlia",
+      httpClient: Stripe.createFetchHttpClient(),
+    });
     const origin = request.headers.get("origin") || "http://localhost:3000";
 
     const session = await stripe.checkout.sessions.create({
