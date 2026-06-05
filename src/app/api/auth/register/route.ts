@@ -7,14 +7,17 @@ export const runtime = "nodejs";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { email, password, full_name, user_name } = body;
+    const { email: rawEmail, password, full_name, user_name } = body;
 
-    if (!email || !password || !full_name) {
+    if (!rawEmail || !password || !full_name) {
       return NextResponse.json(
         { error: "Email, password, and full name are required" },
         { status: 400 }
       );
     }
+
+    // Store emails normalized so logins are case-insensitive and dup-checks work.
+    const email = String(rawEmail).trim().toLowerCase();
 
     if (password.length < 6) {
       return NextResponse.json(

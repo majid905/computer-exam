@@ -372,7 +372,12 @@ export async function getUserById(id: number) {
 }
 
 export async function getUserByEmail(email: string) {
-  const rows = await query<User>(`SELECT * FROM users WHERE email = ? LIMIT 1`, [email]);
+  // Case-insensitive match: emails are not case-sensitive, and historic rows
+  // were stored with mixed case. COLLATE NOCASE makes login/reset/dup-checks robust.
+  const rows = await query<User>(
+    `SELECT * FROM users WHERE email = ? COLLATE NOCASE LIMIT 1`,
+    [email],
+  );
   return rows[0] || null;
 }
 
