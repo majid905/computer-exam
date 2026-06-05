@@ -36,7 +36,8 @@ export async function POST(request: Request) {
     const origin = request.headers.get("origin") || "http://localhost:3000";
 
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
+      // 2026 "dahlia" API: embedded checkout ui_mode is "embedded_page".
+      ui_mode: "embedded_page",
       line_items: [
         {
           price_data: {
@@ -51,8 +52,8 @@ export async function POST(request: Request) {
         },
       ],
       mode: "payment",
-      success_url: `${origin}/settings?subscription=success`,
-      cancel_url: `${origin}/pricing?subscription=cancel`,
+      // Embedded checkout returns the customer to this URL inside the app after payment.
+      return_url: `${origin}/settings?subscription=success&session_id={CHECKOUT_SESSION_ID}`,
       client_reference_id: String(auth.userId),
       metadata: {
         plan_id: String(plan.id),
@@ -60,7 +61,8 @@ export async function POST(request: Request) {
       },
     });
 
-    return NextResponse.json({ sessionId: session.id, url: session.url });
+    // clientSecret drives the embedded <EmbeddedCheckout/> on the client.
+    return NextResponse.json({ clientSecret: session.client_secret, sessionId: session.id });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || "Failed to create checkout session" }, { status: 500 });
   }

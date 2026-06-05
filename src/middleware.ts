@@ -45,6 +45,7 @@ const PUBLIC_API_PATHS = [
   "/api/contact-messages",
   "/api/site-contacts",
   "/api/site-stats",
+  "/api/stripe-public-key",
   "/api/stripe-webhook",
 ];
 

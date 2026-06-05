@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUserState, resetState } from "@/lib/storage";
 import { useAuth } from "@/context/AuthContext";
+import { CheckoutDialog } from "@/components/billing/CheckoutDialog";
 
 function resizeImageToBase64(file: File, maxSize = 200, quality = 0.6): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -90,7 +91,7 @@ export default function SettingsPage() {
   }
 
   const [plans, setPlans] = useState<any[]>([]);
-  const [checkoutLoading, setCheckoutLoading] = useState<number | null>(null);
+  const [checkoutPlan, setCheckoutPlan] = useState<{ id: number; title: string } | null>(null);
 
   useEffect(() => {
     fetch("/api/pricing/")
@@ -121,26 +122,6 @@ export default function SettingsPage() {
       setSaveMsg(`Network error: ${e.message}`);
     }
     setSaving(false);
-  }
-
-  async function subscribe(planId: number) {
-    setCheckoutLoading(planId);
-    try {
-      const res = await fetch("/api/create-checkout-session/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan_id: planId }),
-      });
-      const data = await res.json();
-      if (res.ok && data.url) {
-        window.location.href = data.url;
-      } else {
-        setSaveMsg(data.error || "Failed to start checkout.");
-      }
-    } catch (e: any) {
-      setSaveMsg(`Network error: ${e.message}`);
-    }
-    setCheckoutLoading(null);
   }
 
   async function saveTheme(theme: string) {
@@ -317,11 +298,10 @@ export default function SettingsPage() {
                 </p>
               </div>
               <button
-                onClick={() => subscribe(plan.id)}
-                disabled={checkoutLoading === plan.id}
+                onClick={() => setCheckoutPlan({ id: plan.id, title: plan.title })}
                 className="ud-btn ud-btn-primary ud-btn-sm"
               >
-                {checkoutLoading === plan.id ? "Loading..." : subscription ? "Renew" : "Upgrade"}
+                {subscription ? "Renew" : "Upgrade"}
               </button>
             </div>
           ))}
@@ -376,6 +356,14 @@ export default function SettingsPage() {
           Reset all progress
         </button>
       </section>
+
+      {checkoutPlan && (
+        <CheckoutDialog
+          planId={checkoutPlan.id}
+          planTitle={checkoutPlan.title}
+          onClose={() => setCheckoutPlan(null)}
+        />
+      )}
     </div>
   );
 }

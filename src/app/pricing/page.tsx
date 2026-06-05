@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { CheckoutDialog } from "@/components/billing/CheckoutDialog";
 
 export default function PricingPage() {
   const { subscription } = useAuth();
   const [plans, setPlans] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [checkoutLoading, setCheckoutLoading] = useState<number | null>(null);
+  const [checkoutPlan, setCheckoutPlan] = useState<{ id: number; title: string } | null>(null);
 
   useEffect(() => {
     fetch("/api/pricing/")
@@ -18,26 +19,6 @@ export default function PricingPage() {
       })
       .catch(() => setLoading(false));
   }, []);
-
-  async function subscribe(planId: number) {
-    setCheckoutLoading(planId);
-    try {
-      const res = await fetch("/api/create-checkout-session/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan_id: planId }),
-      });
-      const data = await res.json();
-      if (res.ok && data.url) {
-        window.location.href = data.url;
-      } else {
-        alert(data.error || "Failed to start checkout.");
-      }
-    } catch {
-      alert("Network error. Please try again.");
-    }
-    setCheckoutLoading(null);
-  }
 
   if (loading) {
     return (
@@ -86,15 +67,10 @@ export default function PricingPage() {
             </ul>
             <div className="mt-6">
               <button
-                onClick={() => subscribe(plan.id)}
-                disabled={checkoutLoading === plan.id}
+                onClick={() => setCheckoutPlan({ id: plan.id, title: plan.title })}
                 className="ud-btn ud-btn-primary w-full"
               >
-                {checkoutLoading === plan.id
-                  ? "Loading..."
-                  : subscription
-                    ? "Renew Plan"
-                    : "Subscribe"}
+                {subscription ? "Renew Plan" : "Subscribe"}
               </button>
             </div>
           </article>
@@ -105,6 +81,14 @@ export default function PricingPage() {
           </div>
         )}
       </div>
+
+      {checkoutPlan && (
+        <CheckoutDialog
+          planId={checkoutPlan.id}
+          planTitle={checkoutPlan.title}
+          onClose={() => setCheckoutPlan(null)}
+        />
+      )}
     </div>
   );
 }
