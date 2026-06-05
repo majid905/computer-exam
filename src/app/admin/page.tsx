@@ -9,17 +9,20 @@ export default function AdminDashboardPage() {
   const [stats, setStats] = useState({ users: 0, questions: 0, chapters: 0, mockTests: 0, contacts: 0 });
   const [recentUsers, setRecentUsers] = useState<any[]>([]);
   const [recentContacts, setRecentContacts] = useState<any[]>([]);
+  const [subStats, setSubStats] = useState({ today: 0, thisMonth: 0, allTime: 0 });
+  const [subscribedUsers, setSubscribedUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
       try {
-        const [uRes, qRes, cRes, mRes, coRes] = await Promise.all([
+        const [uRes, qRes, cRes, mRes, coRes, subRes] = await Promise.all([
           fetch("/api/users/"),
           fetch("/api/questions/"),
           fetch("/api/chapters/"),
           fetch("/api/mock-tests/"),
           fetch("/api/contact-messages/"),
+          fetch("/api/admin/subscription-stats/"),
         ]);
         const users = uRes.ok ? await uRes.json() : [];
         const questions = qRes.ok ? await qRes.json() : [];
@@ -36,6 +39,12 @@ export default function AdminDashboardPage() {
         });
         setRecentUsers(Array.isArray(users) ? users.slice(0, 5) : []);
         setRecentContacts(Array.isArray(contacts) ? contacts.slice(0, 5) : []);
+
+        if (subRes.ok) {
+          const subData = await subRes.json();
+          setSubStats(subData.stats ?? { today: 0, thisMonth: 0, allTime: 0 });
+          setSubscribedUsers(Array.isArray(subData.users) ? subData.users : []);
+        }
       } catch {
         // ignore
       } finally {
@@ -102,6 +111,59 @@ export default function AdminDashboardPage() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
             </svg>
           }
+        />
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <StatCard
+          title="Today's Revenue"
+          value={`CAD ${subStats.today.toFixed(2)}`}
+          color="success"
+          icon={
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          }
+        />
+        <StatCard
+          title="This Month's Revenue"
+          value={`CAD ${subStats.thisMonth.toFixed(2)}`}
+          color="brand"
+          icon={
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          }
+        />
+        <StatCard
+          title="All-Time Revenue"
+          value={`CAD ${subStats.allTime.toFixed(2)}`}
+          color="accent"
+          icon={
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          }
+        />
+      </div>
+
+      <div className="ud-card p-5 space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-bold text-[var(--color-ink)]">
+            Subscribed Users ({subscribedUsers.length})
+          </h2>
+        </div>
+        <DataTable
+          columns={[
+            { key: "user_id", label: "User ID" },
+            { key: "full_name", label: "Name", render: (r) => r.full_name || "—" },
+            { key: "email", label: "Email" },
+            { key: "plan_title", label: "Plan" },
+            { key: "amount", label: "Amount", render: (r) => `CAD ${Number(r.amount || 0).toFixed(2)}` },
+            { key: "end_date", label: "Expires", render: (r) => r.end_date ? new Date(r.end_date).toLocaleDateString() : "—" },
+            { key: "created_at", label: "Subscribed", render: (r) => new Date(r.created_at).toLocaleDateString() },
+          ]}
+          rows={subscribedUsers}
         />
       </div>
 

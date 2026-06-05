@@ -36,7 +36,7 @@ function resizeImageToBase64(file: File, maxSize = 200, quality = 0.6): Promise<
 export default function SettingsPage() {
   const router = useRouter();
   const [state, update] = useUserState();
-  const { user, refreshUser } = useAuth();
+  const { user, refreshUser, subscription } = useAuth();
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState("");
   const [phone, setPhone] = useState("");
@@ -53,6 +53,16 @@ export default function SettingsPage() {
     html.classList.toggle("dark", dark);
     localStorage.setItem("pc:theme", state.theme);
   }, [state.theme]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("subscription") === "success") {
+      setSaveMsg("Payment successful! Your subscription is now active.");
+      window.history.replaceState({}, "", window.location.pathname);
+      setTimeout(() => setSaveMsg(""), 5000);
+    }
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -79,6 +89,16 @@ export default function SettingsPage() {
     }
   }
 
+  const [plans, setPlans] = useState<any[]>([]);
+  const [checkoutLoading, setCheckoutLoading] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetch("/api/pricing/")
+      .then((r) => r.json())
+      .then((data) => setPlans(Array.isArray(data) ? data : []))
+      .catch(() => {});
+  }, []);
+
   async function saveProfile() {
     if (!user) return;
     setSaving(true);
@@ -101,6 +121,26 @@ export default function SettingsPage() {
       setSaveMsg(`Network error: ${e.message}`);
     }
     setSaving(false);
+  }
+
+  async function subscribe(planId: number) {
+    setCheckoutLoading(planId);
+    try {
+      const res = await fetch("/api/create-checkout-session/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan_id: planId }),
+      });
+      const data = await res.json();
+      if (res.ok && data.url) {
+        window.location.href = data.url;
+      } else {
+        setSaveMsg(data.error || "Failed to start checkout.");
+      }
+    } catch (e: any) {
+      setSaveMsg(`Network error: ${e.message}`);
+    }
+    setCheckoutLoading(null);
   }
 
   async function saveTheme(theme: string) {
@@ -223,6 +263,71 @@ export default function SettingsPage() {
               {t}
             </button>
           ))}
+        </div>
+      </section>
+
+      <section className="ud-card p-6 mb-4">
+        <h2 className="font-extrabold text-[var(--color-ink)] mb-1">Subscription</h2>
+        <p className="text-sm text-[var(--color-muted)] mb-4">
+          Manage your plan and billing.
+        </p>
+
+        {subscription ? (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-bold text-[var(--color-ink)]">{subscription.plan_title}</p>
+                <p className="text-sm text-[var(--color-muted)]">
+                  Expires on {new Date(subscription.end_date).toLocaleDateString()}
+                </p>
+              </div>
+              <span className="inline-flex px-2 py-0.5 rounded text-xs font-semibold bg-[var(--color-success-soft)] text-[var(--color-success)]">
+                Active
+              </span>
+            </div>
+            {new Date(subscription.end_date) < new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) && (
+              <p className="text-sm text-[var(--color-warning)]">
+                Your subscription is expiring soon. Renew to keep full access.
+              </p>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-bold text-[var(--color-ink)]">Free Plan</p>
+                <p className="text-sm text-[var(--color-muted)]">
+                  Limited to 2 mock tests. Upgrade for unlimited access.
+                </p>
+              </div>
+              <span className="inline-flex px-2 py-0.5 rounded text-xs font-semibold bg-[var(--color-muted)]/10 text-[var(--color-muted)]">
+                Free
+              </span>
+            </div>
+          </div>
+        )}
+
+        <div className="mt-4 space-y-2">
+          {plans.map((plan) => (
+            <div key={plan.id} className="flex items-center justify-between rounded-md border-2 border-[var(--color-border)] px-3 py-2">
+              <div>
+                <p className="text-sm font-bold text-[var(--color-ink)]">{plan.title}</p>
+                <p className="text-xs text-[var(--color-muted)]">
+                  CAD {(plan.price_cents / 100).toFixed(2)} / {plan.interval}
+                </p>
+              </div>
+              <button
+                onClick={() => subscribe(plan.id)}
+                disabled={checkoutLoading === plan.id}
+                className="ud-btn ud-btn-primary ud-btn-sm"
+              >
+                {checkoutLoading === plan.id ? "Loading..." : subscription ? "Renew" : "Upgrade"}
+              </button>
+            </div>
+          ))}
+          {plans.length === 0 && (
+            <p className="text-sm text-[var(--color-muted)]">No pricing plans available.</p>
+          )}
         </div>
       </section>
 

@@ -7,6 +7,7 @@ import { useUserState } from "@/lib/storage";
 import { CHAPTER_EMOJI } from "@/lib/content";
 import { ProgressBar } from "@/components/ui/Progress";
 import { RequireAuth } from "@/components/app/RequireAuth";
+import { useAuth } from "@/context/AuthContext";
 import type { Chapter } from "@/lib/types";
 
 function daysUntil(dateISO: string): number {
@@ -28,6 +29,7 @@ export default function Dashboard() {
 function DashboardInner() {
   const router = useRouter();
   const [state, , hydrated] = useUserState();
+  const { subscription } = useAuth();
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [questionCounts, setQuestionCounts] = useState<Record<string, number>>({});
 
@@ -133,9 +135,20 @@ function DashboardInner() {
     <div className="mx-auto max-w-6xl px-5 py-8 sm:py-10">
       <section className="ud-card p-6 sm:p-8 mb-8 flex flex-col sm:flex-row sm:items-center gap-6">
         <div className="flex-1">
-          <p className="text-xs font-bold uppercase tracking-wider text-[var(--color-brand)] mb-2">
-            Your study dashboard
-          </p>
+          <div className="flex items-center gap-3 mb-2">
+            <p className="text-xs font-bold uppercase tracking-wider text-[var(--color-brand)]">
+              Your study dashboard
+            </p>
+            {subscription ? (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-[var(--color-success-soft)] text-[var(--color-success)]">
+                ⭐ {subscription.plan_title}
+              </span>
+            ) : (
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-[var(--color-muted)]/10 text-[var(--color-muted)]">
+                Free Plan
+              </span>
+            )}
+          </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[var(--color-ink)]">
             {daysLeft !== null
               ? daysLeft > 0

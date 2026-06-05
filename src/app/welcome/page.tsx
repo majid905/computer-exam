@@ -653,7 +653,7 @@ function ContactSection() {
 
       <div className="mt-8 flex flex-col items-center gap-5">
         {/* Contact Info Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full max-w-4xl">
+        <div className="gap-4 mx-auto d-flex">
           {contact?.email && (
             <div className="ud-card p-5 text-center">
               <div className="text-2xl mb-2">✉️</div>

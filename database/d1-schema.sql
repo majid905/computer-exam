@@ -114,6 +114,8 @@ CREATE TABLE `contact_messages` (
   `phone` TEXT,
   `subject` TEXT,
   `message` TEXT NOT NULL,
+  `reply` TEXT,
+  `replied_at` TEXT,
   `status` TEXT NOT NULL DEFAULT 'new',
   `created_at` TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -403,3 +405,13 @@ CREATE TABLE `users` (
   `updated_at` TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+
+DROP TABLE IF EXISTS `stripe_configs`;
+CREATE TABLE `stripe_configs` (
+  `id` INTEGER PRIMARY KEY AUTOINCREMENT,
+  `publishable_key` TEXT,
+  `secret_key` TEXT,
+  `status` TEXT NOT NULL DEFAULT 'inactive',
+  `created_at` TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

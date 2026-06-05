@@ -50,13 +50,26 @@ type User = {
   created_at: string;
 };
 
+type Subscription = {
+  id: number;
+  user_id: number;
+  pricing_plan_id: number;
+  plan_title: string;
+  start_date: string;
+  end_date: string;
+  payment_status: string;
+  status: string;
+};
+
 type AuthContextType = {
   user: User | null;
+  subscription: Subscription | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   register: (data: { email: string; password: string; full_name: string; user_name?: string }) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  refreshSubscription: () => Promise<void>;
   syncSettings: () => Promise<void>;
 };
 
@@ -64,6 +77,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
 
   async function refreshUser() {
@@ -78,6 +92,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch {
       setUser(null);
+    }
+  }
+
+  async function refreshSubscription() {
+    try {
+      const res = await fetch("/api/subscriptions/current/");
+      if (res.ok) {
+        const data = await res.json();
+        setSubscription(data.subscription);
+      } else {
+        setSubscription(null);
+      }
+    } catch {
+      setSubscription(null);
     }
   }
 
@@ -132,6 +160,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async function init() {
       const u = await refreshUser();
       if (u) {
+        await refreshSubscription();
         await syncSettings();
         await syncProgress(u.id);
       }
@@ -152,6 +181,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { success: false, error: data.error || "Login failed" };
       }
       setUser(data.user);
+      await refreshSubscription();
       await syncSettings();
       await syncProgress(data.user.id);
       return { success: true };
@@ -184,7 +214,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, refreshUser, syncSettings }}>
+    <AuthContext.Provider value={{ user, subscription, loading, login, register, logout, refreshUser, refreshSubscription, syncSettings }}>
       {children}
     </AuthContext.Provider>
   );

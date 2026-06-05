@@ -39,6 +39,7 @@ const PUBLIC_API_PATHS = [
   "/api/categories",
   "/api/blog-categories",
   "/api/contact-messages",
+  "/api/stripe-webhook",
 ];
 
 function isPublicPath(pathname: string): boolean {

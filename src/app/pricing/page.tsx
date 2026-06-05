@@ -1,15 +1,51 @@
-import type { Metadata } from "next";
-import { getPricingPlans } from "@/lib/backend";
+"use client";
 
-export const metadata: Metadata = {
-  title: "Pricing | Passpilot",
-  description: "Choose a pricing plan for Passpilot study and mock exams.",
-};
+import { useEffect, useState } from "react";
+import { useAuth } from "@/context/AuthContext";
 
-export const dynamic = "force-dynamic";
+export default function PricingPage() {
+  const { subscription } = useAuth();
+  const [plans, setPlans] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [checkoutLoading, setCheckoutLoading] = useState<number | null>(null);
 
-export default async function PricingPage() {
-  const plans = await getPricingPlans();
+  useEffect(() => {
+    fetch("/api/pricing/")
+      .then((r) => r.json())
+      .then((data) => {
+        setPlans(Array.isArray(data) ? data : []);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  async function subscribe(planId: number) {
+    setCheckoutLoading(planId);
+    try {
+      const res = await fetch("/api/create-checkout-session/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan_id: planId }),
+      });
+      const data = await res.json();
+      if (res.ok && data.url) {
+        window.location.href = data.url;
+      } else {
+        alert(data.error || "Failed to start checkout.");
+      }
+    } catch {
+      alert("Network error. Please try again.");
+    }
+    setCheckoutLoading(null);
+  }
+
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-6xl px-5 py-8 sm:py-10">
+        <div className="ud-card p-8 text-center text-[var(--color-muted)]">Loading plans...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-8 sm:py-10">
@@ -21,7 +57,7 @@ export default async function PricingPage() {
           Choose a plan
         </h1>
         <p className="text-[var(--color-muted)] mt-2 max-w-2xl">
-          Dynamic pricing loaded from the Passpilot backend.
+          Upgrade to unlock all mock tests and premium features.
         </p>
       </header>
 
@@ -48,8 +84,26 @@ export default async function PricingPage() {
                 </li>
               ))}
             </ul>
+            <div className="mt-6">
+              <button
+                onClick={() => subscribe(plan.id)}
+                disabled={checkoutLoading === plan.id}
+                className="ud-btn ud-btn-primary w-full"
+              >
+                {checkoutLoading === plan.id
+                  ? "Loading..."
+                  : subscription
+                    ? "Renew Plan"
+                    : "Subscribe"}
+              </button>
+            </div>
           </article>
         ))}
+        {plans.length === 0 && (
+          <div className="ud-card p-8 text-center text-[var(--color-muted)]">
+            No pricing plans available.
+          </div>
+        )}
       </div>
     </div>
   );

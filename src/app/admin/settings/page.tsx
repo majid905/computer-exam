@@ -4,15 +4,23 @@ import { useEffect, useState } from "react";
 
 export default function AdminSettingsPage() {
   const [settings, setSettings] = useState<any>({});
+  const [stripeConfig, setStripeConfig] = useState<any>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [stripeSaving, setStripeSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [stripeMessage, setStripeMessage] = useState("");
 
   async function load() {
     setLoading(true);
-    const res = await fetch("/api/app-settings/");
-    const data = res.ok ? await res.json() : {};
-    setSettings(data ?? {});
+    const [appRes, stripeRes] = await Promise.all([
+      fetch("/api/app-settings/"),
+      fetch("/api/stripe-config/"),
+    ]);
+    const appData = appRes.ok ? await appRes.json() : {};
+    const stripeData = stripeRes.ok ? await stripeRes.json() : {};
+    setSettings(appData ?? {});
+    setStripeConfig(stripeData ?? {});
     setLoading(false);
   }
 
@@ -35,8 +43,27 @@ export default function AdminSettingsPage() {
     setSaving(false);
   }
 
+  async function handleStripeSave(e: React.FormEvent) {
+    e.preventDefault();
+    setStripeSaving(true);
+    const res = await fetch("/api/stripe-config/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(stripeConfig),
+    });
+    if (res.ok) {
+      setStripeMessage("Stripe config saved successfully!");
+      setTimeout(() => setStripeMessage(""), 3000);
+    }
+    setStripeSaving(false);
+  }
+
   function update(key: string, value: string) {
     setSettings((prev: any) => ({ ...prev, [key]: value }));
+  }
+
+  function updateStripe(key: string, value: string) {
+    setStripeConfig((prev: any) => ({ ...prev, [key]: value }));
   }
 
   const fields = [
@@ -99,6 +126,62 @@ export default function AdminSettingsPage() {
         <div className="flex justify-end">
           <button type="submit" disabled={saving} className="ud-btn ud-btn-primary">
             {saving ? "Saving..." : "Save Settings"}
+          </button>
+        </div>
+      </form>
+
+      <h2 className="text-xl font-extrabold text-[var(--color-ink)] mt-8">Stripe Payment Gateway</h2>
+
+      {stripeMessage && (
+        <div className="rounded-md bg-[var(--color-success-soft)] text-[var(--color-success)] px-4 py-3 text-sm font-semibold">
+          {stripeMessage}
+        </div>
+      )}
+
+      <form onSubmit={handleStripeSave} className="ud-card p-6 space-y-4">
+        <div>
+          <label className="block text-xs font-bold uppercase tracking-wider text-[var(--color-muted)] mb-1">
+            Publishable Key
+          </label>
+          <input
+            type="text"
+            value={stripeConfig.publishable_key ?? ""}
+            onChange={(e) => updateStripe("publishable_key", e.target.value)}
+            placeholder="pk_test_..."
+            className="w-full rounded-md border-2 border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-ink)] focus:outline-none focus:border-[var(--color-brand)]"
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs font-bold uppercase tracking-wider text-[var(--color-muted)] mb-1">
+            Secret Key
+          </label>
+          <input
+            type="password"
+            value={stripeConfig.secret_key ?? ""}
+            onChange={(e) => updateStripe("secret_key", e.target.value)}
+            placeholder="sk_test_..."
+            className="w-full rounded-md border-2 border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-ink)] focus:outline-none focus:border-[var(--color-brand)]"
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs font-bold uppercase tracking-wider text-[var(--color-muted)] mb-1">
+            Status
+          </label>
+          <select
+            value={stripeConfig.status ?? "inactive"}
+            onChange={(e) => updateStripe("status", e.target.value)}
+            className="w-full rounded-md border-2 border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-ink)] focus:outline-none focus:border-[var(--color-brand)]"
+          >
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </div>
+
+        <div className="flex justify-end">
+          <button type="submit" disabled={stripeSaving} className="ud-btn ud-btn-primary">
+            {stripeSaving ? "Saving..." : "Save Stripe Config"}
           </button>
         </div>
       </form>

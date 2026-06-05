@@ -11,6 +11,7 @@ import {
   formatTime,
 } from "@/lib/exam";
 import { RequireAuth } from "@/components/app/RequireAuth";
+import { useAuth } from "@/context/AuthContext";
 
 const DRAFT_KEY = "pc:mock:draft:v1";
 
@@ -37,12 +38,14 @@ export default function MockExamIntro() {
 function MockExamIntroInner() {
   const router = useRouter();
   const [state] = useUserState();
+  const { subscription } = useAuth();
   const last = state.attempts[state.attempts.length - 1];
   const [draft, setDraft] = useState<Draft | null>(null);
   const [now, setNow] = useState<number>(Date.now());
   const [mockTests, setMockTests] = useState<MockTest[]>([]);
   const [selectedMockId, setSelectedMockId] = useState<number | null>(null);
   const [unlockedIds, setUnlockedIds] = useState<Set<number>>(new Set());
+  const [hasSubscription, setHasSubscription] = useState(false);
 
   useEffect(() => {
     try {
@@ -61,23 +64,24 @@ function MockExamIntroInner() {
       fetch("/api/test-attempts").then((r) => r.json()),
     ])
       .then(([testsData, attemptsData]) => {
-        const tests = Array.isArray(testsData) ? testsData : [];
-        setMockTests(tests);
+        let tests = Array.isArray(testsData) ? testsData : [];
         const attempts = Array.isArray(attemptsData) ? attemptsData : [];
-        // Sequential unlocking: first test always unlocked, then pass previous to unlock next
-        const passedIds = new Set(attempts.filter((a: any) => a.result === "pass").map((a: any) => a.mock_test_id));
-        const unlocked = new Set<number>();
-        for (let i = 0; i < tests.length; i++) {
-          if (i === 0 || passedIds.has(tests[i - 1].id)) {
-            unlocked.add(tests[i].id);
-          }
+        // Check subscription status
+        const isSubscribed = !!subscription;
+        setHasSubscription(isSubscribed);
+        // Free users limited to first 2 tests
+        if (!isSubscribed && tests.length > 2) {
+          tests = tests.slice(0, 2);
         }
+        setMockTests(tests);
+        // All tests unlocked for subscribed users; all visible tests unlocked for free users
+        const unlocked = new Set<number>(tests.map((t: MockTest) => t.id));
         setUnlockedIds(unlocked);
         const firstUnlocked = tests.find((t: MockTest) => unlocked.has(t.id));
         if (firstUnlocked) setSelectedMockId(firstUnlocked.id);
       })
       .catch(() => {});
-  }, []);
+  }, [subscription]);
 
   const activeMock = mockTests.find((m) => m.id === selectedMockId) ?? mockTests.find((m) => unlockedIds.has(m.id));
   const durationSeconds = (activeMock?.time_limit ?? MOCK_EXAM_DURATION_SECONDS / 60) * 60;
@@ -120,6 +124,18 @@ function MockExamIntroInner() {
           {Math.round(durationSeconds / 60)} minutes — the new 2026 format.
         </p>
       </header>
+
+      {!hasSubscription && (
+        <section className="ud-card p-6 mb-6 bg-[var(--color-brand-soft)] border-[var(--color-brand)]">
+          <h2 className="font-bold text-[var(--color-brand)]">Free Plan Limit</h2>
+          <p className="text-sm text-[var(--color-ink-2)] mt-1">
+            You can access 2 mock tests on the free plan. Subscribe to unlock all mock tests.
+          </p>
+          <Link href="/pricing" className="ud-btn ud-btn-primary mt-4">
+            Upgrade Now
+          </Link>
+        </section>
+      )}
 
       {mockTests.length > 1 && (
         <section className="ud-card p-6 mb-6">

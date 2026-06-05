@@ -218,6 +218,15 @@ export type Payment = {
   updated_at: string;
 };
 
+export type StripeConfig = {
+  id: number;
+  publishable_key: string | null;
+  secret_key: string | null;
+  status: string;
+  created_at: string;
+  updated_at: string;
+};
+
 export type Faq = {
   id: number;
   question: string;
@@ -287,6 +296,8 @@ export type ContactMessage = {
   phone: string | null;
   subject: string | null;
   message: string;
+  reply: string | null;
+  replied_at: string | null;
   status: string;
   created_at: string;
   updated_at: string;
@@ -1068,6 +1079,111 @@ export async function deletePayment(id: number) {
   await query(`DELETE FROM payments WHERE id = ?`, [id]);
 }
 
+// ===================== SUBSCRIPTION STATS =====================
+
+export async function getSubscriptionStats() {
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+
+  const todayRows = await query<{ total: number }>(
+    `SELECT COALESCE(SUM(amount), 0) as total FROM payments WHERE status = 'completed' AND created_at >= ?`,
+    [todayStart],
+  );
+  const monthRows = await query<{ total: number }>(
+    `SELECT COALESCE(SUM(amount), 0) as total FROM payments WHERE status = 'completed' AND created_at >= ?`,
+    [monthStart],
+  );
+  const allTimeRows = await query<{ total: number }>(
+    `SELECT COALESCE(SUM(amount), 0) as total FROM payments WHERE status = 'completed'`,
+  );
+
+  return {
+    today: Number(todayRows[0]?.total ?? 0),
+    thisMonth: Number(monthRows[0]?.total ?? 0),
+    allTime: Number(allTimeRows[0]?.total ?? 0),
+  };
+}
+
+export async function getSubscribedUsers() {
+  return query<
+    {
+      user_id: number;
+      full_name: string | null;
+      email: string;
+      plan_title: string;
+      amount: number;
+      payment_status: string;
+      subscription_status: string;
+      start_date: string;
+      end_date: string;
+      created_at: string;
+    }
+  >(
+    `SELECT
+       u.id as user_id,
+       u.full_name,
+       u.email,
+       p.title as plan_title,
+       pm.amount,
+       s.payment_status,
+       s.status as subscription_status,
+       s.start_date,
+       s.end_date,
+       s.created_at
+     FROM subscriptions s
+     JOIN users u ON s.user_id = u.id
+     JOIN pricing_plans p ON s.pricing_plan_id = p.id
+     LEFT JOIN payments pm ON pm.user_id = u.id AND pm.subscription_id = s.id
+     WHERE s.payment_status = 'paid'
+     ORDER BY s.created_at DESC`,
+  );
+}
+
+// ===================== STRIPE CONFIG =====================
+
+export async function getStripeConfig() {
+  const rows = await query<StripeConfig>(`SELECT * FROM stripe_configs ORDER BY id DESC LIMIT 1`);
+  return rows[0] || null;
+}
+
+export async function updateStripeConfig(data: Partial<StripeConfig>) {
+  const existing = await getStripeConfig();
+  if (existing) {
+    const fields: string[] = [];
+    const values: any[] = [];
+    for (const [key, value] of Object.entries(data)) {
+      if (value !== undefined && key !== "id") {
+        fields.push(`${key} = ?`);
+        values.push(value);
+      }
+    }
+    if (fields.length === 0) return existing.id;
+    values.push(existing.id);
+    await query(`UPDATE stripe_configs SET ${fields.join(", ")} WHERE id = ?`, values);
+    return existing.id;
+  }
+  const result = await execute(
+    `INSERT INTO stripe_configs (publishable_key, secret_key, status) VALUES (?, ?, ?)`,
+    [data.publishable_key ?? null, data.secret_key ?? null, data.status ?? "inactive"],
+  );
+  return result.insertId as number;
+}
+
+// ===================== ACTIVE SUBSCRIPTION =====================
+
+export async function getActiveSubscriptionByUser(userId: number) {
+  const now = new Date().toISOString();
+  const rows = await query<Subscription & { plan_title: string }>(
+    `SELECT s.*, p.title as plan_title FROM subscriptions s
+     JOIN pricing_plans p ON s.pricing_plan_id = p.id
+     WHERE s.user_id = ? AND s.status = 'active' AND s.end_date > ?
+     ORDER BY s.end_date DESC LIMIT 1`,
+    [userId, now],
+  );
+  return rows[0] || null;
+}
+
 // ===================== FAQS =====================
 
 export async function listFaqs() {
@@ -1292,6 +1408,14 @@ export async function createContactMessage(data: Partial<ContactMessage>) {
     [data.name, data.email, data.phone, data.subject, data.message, data.status ?? "new"],
   );
   return result.insertId as number;
+}
+
+export async function replyContactMessage(id: number, reply: string) {
+  const now = new Date().toISOString();
+  await query(
+    `UPDATE contact_messages SET reply = ?, replied_at = ?, status = 'replied', updated_at = ? WHERE id = ?`,
+    [reply, now, now, id],
+  );
 }
 
 export async function updateContactMessage(id: number, data: Partial<ContactMessage>) {

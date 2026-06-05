@@ -6,6 +6,7 @@ import { useUserState } from "@/lib/storage";
 import { CHAPTER_EMOJI } from "@/lib/content";
 import { ProgressBar } from "@/components/ui/Progress";
 import { RequireAuth } from "@/components/app/RequireAuth";
+import { useAuth } from "@/context/AuthContext";
 import type { Chapter, Question } from "@/lib/types";
 
 type MockTest = {
@@ -28,6 +29,7 @@ export default function PracticeIndexPage() {
 
 function PracticeIndex() {
   const [state] = useUserState();
+  const { subscription } = useAuth();
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [questionCounts, setQuestionCounts] = useState<Record<string, number>>({});
   const [mockTests, setMockTests] = useState<MockTest[]>([]);
@@ -60,20 +62,19 @@ function PracticeIndex() {
       fetch("/api/test-attempts").then((r) => r.json()),
     ])
       .then(([testsData, attemptsData]) => {
-        const tests = Array.isArray(testsData) ? testsData : [];
-        setMockTests(tests);
+        let tests = Array.isArray(testsData) ? testsData : [];
         const attempts = Array.isArray(attemptsData) ? attemptsData : [];
-        const passedIds = new Set(attempts.filter((a: any) => a.result === "pass").map((a: any) => a.mock_test_id));
-        const unlocked = new Set<number>();
-        for (let i = 0; i < tests.length; i++) {
-          if (i === 0 || passedIds.has(tests[i - 1].id)) {
-            unlocked.add(tests[i].id);
-          }
+        // Free users limited to first 2 tests
+        if (!subscription && tests.length > 2) {
+          tests = tests.slice(0, 2);
         }
+        setMockTests(tests);
+        // All visible tests unlocked
+        const unlocked = new Set<number>(tests.map((t: any) => t.id));
         setUnlockedIds(unlocked);
       })
       .catch(() => {});
-  }, []);
+  }, [subscription]);
 
   const studyable = chapters.filter((c) => c.slug !== "study" && c.slug !== "applying");
 

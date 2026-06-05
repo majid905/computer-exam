@@ -21,6 +21,11 @@ export default function AdminPricingPage() {
   const [editItem, setEditItem] = useState<any | null>(null);
   const [showAdd, setShowAdd] = useState(false);
 
+  const [featurePlanId, setFeaturePlanId] = useState<number | null>(null);
+  const [features, setFeatures] = useState<any[]>([]);
+  const [newFeature, setNewFeature] = useState("");
+  const [featuresLoading, setFeaturesLoading] = useState(false);
+
   async function load() {
     setLoading(true);
     const res = await fetch("/api/pricing/");
@@ -64,6 +69,41 @@ export default function AdminPricingPage() {
     }
   }
 
+  async function loadFeatures(planId: number) {
+    setFeaturesLoading(true);
+    const res = await fetch(`/api/pricing/${planId}/features/`);
+    const data = res.ok ? await res.json() : [];
+    setFeatures(Array.isArray(data) ? data : []);
+    setFeaturesLoading(false);
+  }
+
+  async function addFeature() {
+    if (!featurePlanId || !newFeature.trim()) return;
+    const res = await fetch(`/api/pricing/${featurePlanId}/features/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ feature: newFeature.trim() }),
+    });
+    if (res.ok) {
+      setNewFeature("");
+      await loadFeatures(featurePlanId);
+      await load();
+    }
+  }
+
+  async function removeFeature(featureId: number) {
+    if (!featurePlanId) return;
+    const res = await fetch(`/api/pricing/${featurePlanId}/features/`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ feature_id: featureId }),
+    });
+    if (res.ok) {
+      await loadFeatures(featurePlanId);
+      await load();
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -92,9 +132,60 @@ export default function AdminPricingPage() {
           actions={(row) => (
             <div className="flex gap-2">
               <button onClick={() => setEditItem(row)} className="text-[var(--color-brand)] hover:underline text-xs font-semibold">Edit</button>
+              <button onClick={() => { setFeaturePlanId(row.id); loadFeatures(row.id); }} className="text-[var(--color-accent)] hover:underline text-xs font-semibold">Features</button>
             </div>
           )}
         />
+      )}
+
+      {featurePlanId !== null && (
+        <div className="ud-card p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold text-[var(--color-ink)]">
+              Manage Features — {items.find((i) => i.id === featurePlanId)?.title}
+            </h2>
+            <button onClick={() => { setFeaturePlanId(null); setFeatures([]); }} className="text-sm text-[var(--color-muted)] hover:text-[var(--color-ink)]">
+              Close
+            </button>
+          </div>
+
+          {featuresLoading ? (
+            <div className="text-sm text-[var(--color-muted)]">Loading features...</div>
+          ) : (
+            <div className="space-y-3">
+              {features.length === 0 && (
+                <p className="text-sm text-[var(--color-muted)]">No features yet.</p>
+              )}
+              <ul className="space-y-2">
+                {features.map((f) => (
+                  <li key={f.id} className="flex items-center justify-between rounded-md border-2 border-[var(--color-border)] px-3 py-2">
+                    <span className="text-sm text-[var(--color-ink)]">{f.feature}</span>
+                    <button
+                      onClick={() => removeFeature(f.id)}
+                      className="text-xs text-[var(--color-danger)] hover:underline font-semibold"
+                    >
+                      Remove
+                    </button>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newFeature}
+                  onChange={(e) => setNewFeature(e.target.value)}
+                  placeholder="Add a feature..."
+                  className="flex-1 rounded-md border-2 border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-ink)] focus:outline-none focus:border-[var(--color-brand)]"
+                  onKeyDown={(e) => { if (e.key === "Enter") addFeature(); }}
+                />
+                <button onClick={addFeature} disabled={!newFeature.trim()} className="ud-btn ud-btn-primary ud-btn-sm">
+                  Add
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       )}
 
       <AddEditModal open={showAdd || editItem !== null} title={editItem ? "Edit Pricing Plan" : "Add Pricing Plan"} fields={FIELDS} data={editItem ?? undefined} onSave={handleSave} onClose={() => { setShowAdd(false); setEditItem(null); }} />
