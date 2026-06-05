@@ -89,8 +89,12 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Admin-only paths
-  const adminPaths = ["/users", "/api/users", "/api/payments", "/api/activity-logs", "/api/subscriptions", "/admin", "/api/admin"];
+  // Admin-only paths. NOTE: /api/subscriptions and /api/subscriptions/current are
+  // intentionally NOT admin-gated — their handlers call getAuthUser() and scope to
+  // the caller's own userId, so any logged-in user must reach them (otherwise paid
+  // users get 403 and never see their active subscription). Admin's global view is
+  // /api/admin/subscription-stats.
+  const adminPaths = ["/users", "/api/users", "/api/payments", "/api/activity-logs", "/admin", "/api/admin"];
   const isAdminPath = adminPaths.some((p) => pathname === p || pathname.startsWith(p + "/"));
   if (isAdminPath && user.role !== "admin") {
     if (pathname.startsWith("/api/")) {
