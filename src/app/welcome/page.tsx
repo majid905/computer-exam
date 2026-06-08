@@ -34,6 +34,7 @@ export default function WelcomePage() {
       <Features stats={stats} />
       <HowItWorks stats={stats} />
       <SocialProof stats={stats} />
+      <Confidence />
       <Pricing />
       <BlogSection />
       <FAQ />
@@ -268,18 +269,38 @@ function HeroMockup() {
 
 function TrustStrip({ stats }: { stats: any }) {
   const items = [
-    "🇨🇦 IRCC 2026 online format",
-    `🌐 ${stats.languages || 8} languages`,
-    "📵 Works offline",
-    "🚫 No dark patterns",
-    "🔒 Privacy-first",
+    { icon: "🇨🇦", title: "Official 2026 format", sub: "IRCC online test" },
+    { icon: "📚", title: "Built on Discover Canada", sub: "The official source" },
+    { icon: "🌐", title: `${stats.languages || 8} languages`, sub: "Native explanations" },
+    { icon: "🔒", title: "Privacy-first", sub: "No tracking, no spam" },
+    { icon: "✨", title: "No dark patterns", sub: "Honest one-time unlock" },
   ];
   return (
     <section className="border-y bg-[var(--color-surface-2)]">
-      <div className="mx-auto max-w-6xl px-5 py-5 flex flex-wrap items-center justify-center gap-x-7 gap-y-2 text-xs sm:text-sm font-bold text-[var(--color-muted)]">
-        {items.map((t) => (
-          <span key={t}>{t}</span>
-        ))}
+      <div className="mx-auto max-w-6xl px-5 py-6">
+        <p className="text-center text-[11px] font-bold uppercase tracking-wider text-[var(--color-muted-2)]">
+          Trusted by future Canadians from 30+ countries
+        </p>
+        <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-x-6 gap-y-4">
+          {items.map((it) => (
+            <div key={it.title} className="flex items-center gap-2.5 justify-center lg:justify-start">
+              <span
+                aria-hidden
+                className="h-9 w-9 shrink-0 rounded-lg bg-[var(--color-surface)] border border-[var(--color-border)] inline-flex items-center justify-center text-base shadow-sm"
+              >
+                {it.icon}
+              </span>
+              <span className="leading-tight">
+                <span className="block text-sm font-bold text-[var(--color-ink)]">
+                  {it.title}
+                </span>
+                <span className="block text-[11px] font-semibold text-[var(--color-muted)]">
+                  {it.sub}
+                </span>
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );
@@ -483,6 +504,64 @@ function SocialProof({ stats }: { stats: any }) {
           ))}
         </div>
       )}
+    </section>
+  );
+}
+
+/* ---------------- Confidence ---------------- */
+
+function Confidence() {
+  const points = [
+    {
+      icon: "🟢",
+      title: "A green light, not a guess",
+      body: "We track your pass probability across mocks and only flag you ready when the data says so — no walking in and hoping.",
+    },
+    {
+      icon: "🎯",
+      title: "Drill the exact gaps",
+      body: "Every wrong answer becomes a focused review. You spend your time on what's holding you back, not what you already know.",
+    },
+    {
+      icon: "🛟",
+      title: "No surprises on test day",
+      body: "The same 45-minute timer, the same 20-question format, the same 15/20 pass mark. The real test should feel like your tenth, not your first.",
+    },
+  ];
+  return (
+    <section className="mx-auto max-w-6xl px-5 py-4 sm:py-8">
+      <div className="ud-card p-8 sm:p-10">
+        <div className="max-w-2xl">
+          <p className="text-xs font-bold uppercase tracking-wider text-[var(--color-accent)]">
+            Peace of mind
+          </p>
+          <h2 className="mt-2 text-3xl sm:text-4xl font-extrabold tracking-tight text-[var(--color-ink)]">
+            Walk in calm. Walk in ready.
+          </h2>
+          <p className="mt-3 text-[var(--color-muted)] leading-relaxed">
+            The hardest part of the citizenship test isn&apos;t the questions —
+            it&apos;s not knowing whether you&apos;re ready. We make that part
+            certain.
+          </p>
+        </div>
+        <div className="mt-9 grid grid-cols-1 md:grid-cols-3 gap-6">
+          {points.map((p) => (
+            <div key={p.title} className="flex gap-3.5">
+              <span aria-hidden className="pp-icon-tile shrink-0">
+                {p.icon}
+              </span>
+              <div>
+                <h3 className="font-extrabold tracking-tight text-[var(--color-ink)]">
+                  {p.title}
+                </h3>
+                <p className="mt-1.5 text-sm text-[var(--color-muted)] leading-relaxed">
+                  {p.body}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </section>
   );
 }

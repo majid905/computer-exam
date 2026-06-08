@@ -2,6 +2,13 @@
   "name": "web",
   "version": "0.1.0",
   "private": true,
+  "browserslist": [
+    "chrome >= 105",
+    "edge >= 105",
+    "firefox >= 104",
+    "safari >= 15.4",
+    "ios_saf >= 15.4"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",

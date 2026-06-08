@@ -6,26 +6,22 @@ export const runtime = "nodejs";
 
 export async function GET() {
   try {
+    // "Not logged in" is a valid answer, not an error — return 200 with a null
+    // user so the client can render the guest UI without a console 401.
     const auth = await getAuthUser();
     if (!auth) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ user: null });
     }
 
     const user = await getUserById(auth.userId);
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    if (!user || user.status !== "active") {
+      return NextResponse.json({ user: null });
     }
 
-    if (user.status !== "active") {
-      return NextResponse.json({ error: "Account is inactive" }, { status: 401 });
-    }
-
-    const { password, ...safeUser } = user as any;
-    return NextResponse.json({ user: safeUser });
-  } catch (error: any) {
-    return NextResponse.json(
-      { error: error.message || "Failed to fetch user" },
-      { status: 500 }
-    );
+    // Never expose the password hash. JSON.stringify drops `undefined` keys.
+    return NextResponse.json({ user: { ...user, password: undefined } });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Failed to fetch user";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

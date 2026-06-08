@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { getFaqs } from "@/lib/backend";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { faqPageSchema } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "FAQ | Passpilot",
@@ -13,6 +15,9 @@ export default async function FaqPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-8 sm:py-10">
+      {/* FAQPage structured data — eligible for Google's FAQ rich result and
+          frequently quoted by AI answer engines. */}
+      <JsonLd data={faqPageSchema(faqs)} />
       <header className="mb-8">
         <p className="text-xs font-bold uppercase tracking-wider text-[var(--color-brand)]">
           FAQ

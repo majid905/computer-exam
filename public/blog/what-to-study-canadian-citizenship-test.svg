@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 480" width="1200" height="480" role="img" aria-label="What to Study">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2e2a8a"/>
+      <stop offset="1" stop-color="#181555"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="480" fill="url(#g)"/>
+  <g opacity="0.07"><path d="M980,120 L1010,250 L1110,210 L1060,320 L1170,340 L1070,400 L1130,500 L1010,460 L980,560 L950,460 L830,500 L890,400 L790,340 L900,320 L850,210 L950,250 Z" fill="#fff"/></g>
+  <g transform="translate(300,240) scale(1.1)"><rect x="-60" y="-70" width="120" height="140" rx="10" fill="#fff"/><polyline points="-42,-38 -30,-26 -8,-50" fill="none" stroke="#f58a1f" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/><line x1="6" y1="-36" x2="44" y2="-36" stroke="#cfcdf5" stroke-width="8" stroke-linecap="round"/><polyline points="-42,2 -30,14 -8,-10" fill="none" stroke="#f58a1f" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/><line x1="6" y1="4" x2="44" y2="4" stroke="#cfcdf5" stroke-width="8" stroke-linecap="round"/><polyline points="-42,42 -30,54 -8,30" fill="none" stroke="#f58a1f" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/><line x1="6" y1="44" x2="44" y2="44" stroke="#cfcdf5" stroke-width="8" stroke-linecap="round"/></g>
+  <text x="560" y="250" font-family="Inter, Arial, sans-serif" font-size="56" font-weight="800" fill="#ffffff">What to Study</text>
+  <text x="560" y="300" font-family="Inter, Arial, sans-serif" font-size="28" fill="#f58a1f">passpilot.ca</text>
+</svg>

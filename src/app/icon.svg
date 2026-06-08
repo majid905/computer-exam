@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Canadian flag">
+  <defs><clipPath id="r"><rect width="512" height="512" rx="96"/></clipPath></defs>
+  <g clip-path="url(#r)">
+    <rect width="512" height="512" fill="#ffffff"/>
+    <rect x="0" y="0" width="120" height="512" fill="#d52b1e"/>
+    <rect x="392" y="0" width="120" height="512" fill="#d52b1e"/>
+    <path fill="#d52b1e" d="M256 96
+      c6 34 9 50 19 47 l38-13 -12 37 c-3 10 0 12 8 10 l34-7 -19 34 c-5 9 -2 12 7 14 l30 7 -71 59 c-9 7 -7 14 -4 26 l9 31 -71-15 c-11-2 -14 3 -14 14 l4 71 -24 0 4-71 c0-11 -3-16 -14-14 l-71 15 9-31 c3-12 5-19 -4-26 l-71-59 30-7 c9-2 12-5 7-14 l-19-34 34 7 c8 2 11 0 8-10 l-12-37 38 13 c10 3 13-13 19-47 z"/>
+  </g>
+</svg>

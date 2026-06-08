@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { AppShell } from "@/components/app/AppShell";
 import { AuthProvider } from "@/context/AuthContext";
+import { SITE_URL, SITE_NAME, SITE_DESCRIPTION } from "@/lib/seo";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -11,9 +12,45 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "passpilot — AI-powered exam coach",
-  description:
-    "Study, practice, and simulate the Canadian citizenship knowledge test with AI-powered coaching.",
+  // Base URL so every relative OG image / canonical link resolves to an
+  // absolute URL (required for social previews and correct indexing).
+  metadataBase: new URL(SITE_URL),
+  // "%s" is filled in by each page's own title; the home page uses `default`.
+  title: {
+    default: `${SITE_NAME} — AI-powered Canadian citizenship exam coach`,
+    template: `%s | ${SITE_NAME}`,
+  },
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  keywords: [
+    "Canadian citizenship test",
+    "citizenship exam practice",
+    "Discover Canada quiz",
+    "citizenship test prep",
+    "mock citizenship exam",
+  ],
+  alternates: { canonical: "/" },
+  // Default rich-preview card shown when a page is shared (Facebook, LinkedIn,
+  // iMessage, Slack…). Individual pages can override this.
+  openGraph: {
+    type: "website",
+    siteName: SITE_NAME,
+    url: SITE_URL,
+    title: `${SITE_NAME} — AI-powered Canadian citizenship exam coach`,
+    description: SITE_DESCRIPTION,
+    locale: "en_CA",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `${SITE_NAME} — AI-powered Canadian citizenship exam coach`,
+    description: SITE_DESCRIPTION,
+  },
+  // Explicitly invite indexing (default, but makes intent clear).
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-image-preview": "large" },
+  },
 };
 
 const themeInitScript = `
