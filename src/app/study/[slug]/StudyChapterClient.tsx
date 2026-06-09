@@ -9,7 +9,10 @@ import {
   officialPdfPageUrl,
 } from "@/lib/content";
 import { RequireAuth } from "@/components/app/RequireAuth";
+import { useAuth } from "@/context/AuthContext";
 import type { Chapter, ChapterSummary, Question } from "@/lib/types";
+
+const FREE_CHAPTER_LIMIT = 2;
 
 export default function StudyChapterClient({ slug }: { slug: string }) {
   return (
@@ -22,6 +25,8 @@ export default function StudyChapterClient({ slug }: { slug: string }) {
 function StudyChapterInner({ slug }: { slug: string }) {
   const router = useRouter();
   const [, update] = useUserState();
+  const { subscription } = useAuth();
+  const isPro = !!(subscription && subscription.status === "active");
   const [chapter, setChapter] = useState<Chapter | null>(null);
   const [summary, setSummary] = useState<ChapterSummary | null>(null);
   const [qs, setQs] = useState<Question[]>([]);
@@ -29,6 +34,76 @@ function StudyChapterInner({ slug }: { slug: string }) {
   const [prevTitle, setPrevTitle] = useState<string | null>(null);
   const [nextTitle, setNextTitle] = useState<string | null>(null);
   const [allChapters, setAllChapters] = useState<{slug: string; title: string}[]>([]);
+  const [ttsState, setTtsState] = useState<"idle" | "speaking" | "paused">("idle");
+
+  // Build the full text to speak from the chapter summary
+  function buildSpeechText(title: string, s: ChapterSummary | null): string {
+    if (!s) return title;
+    const parts: string[] = [title + "."];
+    if (s.intro) parts.push(s.intro);
+    for (const section of s.sections ?? []) {
+      parts.push(section.heading + ".");
+      for (const pt of section.points ?? []) parts.push(pt);
+    }
+    return parts.join(" ");
+  }
+
+  function getVoice(): SpeechSynthesisVoice | null {
+    const voices = window.speechSynthesis.getVoices();
+    return (
+      voices.find((v) =>
+        v.name.toLowerCase().includes("samantha") ||
+        v.name.toLowerCase().includes("zira") ||
+        v.name.toLowerCase().includes("female")
+      ) ?? voices.find((v) => v.lang.startsWith("en")) ?? null
+    );
+  }
+
+  function speakChapter() {
+    if (!chapter) return;
+    window.speechSynthesis.cancel();
+    const text = buildSpeechText(chapter.title, summary);
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = "en-CA";
+    utter.rate = 1;
+    const voice = getVoice();
+    if (voice) utter.voice = voice;
+    utter.onstart = () => setTtsState("speaking");
+    utter.onend = () => setTtsState("idle");
+    utter.onerror = () => setTtsState("idle");
+    // If voices not ready yet, wait and retry once
+    if (window.speechSynthesis.getVoices().length === 0) {
+      window.speechSynthesis.onvoiceschanged = () => {
+        const v2 = getVoice();
+        if (v2) utter.voice = v2;
+        window.speechSynthesis.speak(utter);
+        window.speechSynthesis.onvoiceschanged = null;
+      };
+    } else {
+      window.speechSynthesis.speak(utter);
+    }
+    setTtsState("speaking");
+  }
+
+  function pauseSpeech() {
+    window.speechSynthesis.pause();
+    setTtsState("paused");
+  }
+
+  function resumeSpeech() {
+    window.speechSynthesis.resume();
+    setTtsState("speaking");
+  }
+
+  function stopSpeech() {
+    window.speechSynthesis.cancel();
+    setTtsState("idle");
+  }
+
+  // Stop speech when navigating away or changing chapter
+  useEffect(() => {
+    return () => { window.speechSynthesis.cancel(); };
+  }, [slug]);
 
   // Load all chapters for navigation
   useEffect(() => {
@@ -141,6 +216,32 @@ function StudyChapterInner({ slug }: { slug: string }) {
     notFound();
   }
 
+  // Block free users from chapters beyond the limit
+  if (!isPro && idx >= FREE_CHAPTER_LIMIT) {
+    return (
+      <div className="mx-auto max-w-3xl px-5 py-16 text-center">
+        <div className="mb-4 text-5xl">🔒</div>
+        <h1 className="mb-2 text-2xl font-extrabold tracking-tight text-[var(--color-ink)]">
+          Pro Chapter
+        </h1>
+        <p className="mb-1 text-[var(--color-muted)]">
+          <strong>{chapter.title}</strong> is available on the Pro plan.
+        </p>
+        <p className="mb-8 text-sm text-[var(--color-muted)]">
+          Free plan includes the first {FREE_CHAPTER_LIMIT} chapters. Upgrade to unlock all {allChapters.length} chapters, practice questions, and mock exams.
+        </p>
+        <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+          <Link href="/pricing" className="ud-btn ud-btn-primary">
+            See Pro Plans
+          </Link>
+          <Link href="/study" className="ud-btn ud-btn-ghost">
+            ← Back to chapters
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-3xl px-5 py-8 sm:py-10">
       <div className="text-sm text-[var(--color-muted)] mb-2">
@@ -163,7 +264,7 @@ function StudyChapterInner({ slug }: { slug: string }) {
             </h1>
           </div>
         </div>
-        <div className="mt-4">
+        <div className="mt-4 flex flex-wrap items-center gap-2">
           <a
             href={officialPdfPageUrl(1)}
             target="_blank"
@@ -172,6 +273,52 @@ function StudyChapterInner({ slug }: { slug: string }) {
           >
             📄 Read the official IRCC PDF ↗
           </a>
+
+          {ttsState === "idle" && (
+            <button
+              onClick={speakChapter}
+              className="ud-btn ud-btn-ghost ud-btn-sm flex items-center gap-1.5"
+              title="Listen to this chapter"
+            >
+              🔊 Listen
+            </button>
+          )}
+          {ttsState === "speaking" && (
+            <>
+              <button
+                onClick={pauseSpeech}
+                className="ud-btn ud-btn-ghost ud-btn-sm flex items-center gap-1.5"
+                title="Pause"
+              >
+                ⏸ Pause
+              </button>
+              <button
+                onClick={stopSpeech}
+                className="ud-btn ud-btn-ghost ud-btn-sm flex items-center gap-1.5 text-[var(--color-danger)]"
+                title="Stop"
+              >
+                ⏹ Stop
+              </button>
+            </>
+          )}
+          {ttsState === "paused" && (
+            <>
+              <button
+                onClick={resumeSpeech}
+                className="ud-btn ud-btn-ghost ud-btn-sm flex items-center gap-1.5 text-[var(--color-brand)]"
+                title="Resume"
+              >
+                ▶ Resume
+              </button>
+              <button
+                onClick={stopSpeech}
+                className="ud-btn ud-btn-ghost ud-btn-sm flex items-center gap-1.5 text-[var(--color-danger)]"
+                title="Stop"
+              >
+                ⏹ Stop
+              </button>
+            </>
+          )}
         </div>
       </header>
 

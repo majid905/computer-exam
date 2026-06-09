@@ -1,16 +1,21 @@
 import { NextResponse } from "next/server";
 import {
   listPracticeQuestions,
+  listAllPracticeQuestions,
   getPracticeOptionsByQuestionId,
   createPracticeQuestion,
   createPracticeQuestionOption,
 } from "@/lib/backend";
+import { getAuthUser } from "@/lib/auth";
 
 export const runtime = "nodejs";
 
 export async function GET() {
   try {
-    const questions = await listPracticeQuestions();
+    const auth = await getAuthUser();
+    const questions = auth?.role === "admin"
+      ? await listAllPracticeQuestions()
+      : await listPracticeQuestions();
     const questionsWithOptions = await Promise.all(
       questions.map(async (q) => {
         const options = await getPracticeOptionsByQuestionId(q.id);
@@ -20,7 +25,6 @@ export async function GET() {
     return NextResponse.json(questionsWithOptions);
   } catch (error: any) {
     console.error("[GET /api/practice-questions] error:", error);
-    // Gracefully return empty array if practice_questions table does not exist yet
     if (error?.message?.includes("practice_questions") && error?.message?.includes("doesn't exist")) {
       return NextResponse.json([]);
     }

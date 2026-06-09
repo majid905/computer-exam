@@ -6,7 +6,10 @@ import { useUserState } from "@/lib/storage";
 import { CHAPTER_EMOJI } from "@/lib/content";
 import { ProgressBar } from "@/components/ui/Progress";
 import { RequireAuth } from "@/components/app/RequireAuth";
+import { useAuth } from "@/context/AuthContext";
 import type { Chapter } from "@/lib/types";
+
+const FREE_CHAPTER_LIMIT = 2;
 
 export default function StudyIndexPage() {
   return (
@@ -18,6 +21,8 @@ export default function StudyIndexPage() {
 
 function StudyIndex() {
   const [state] = useUserState();
+  const { subscription } = useAuth();
+  const isPro = !!(subscription && subscription.status === "active");
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [questionCounts, setQuestionCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
@@ -72,6 +77,19 @@ function StudyIndex() {
         </p>
       </header>
 
+      {!isPro && (
+        <div className="mb-5 flex items-center gap-3 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 dark:border-amber-700/50 dark:bg-amber-900/20">
+          <span className="text-xl">🔒</span>
+          <p className="text-sm text-amber-900 dark:text-amber-200">
+            Free plan includes the first <strong>{FREE_CHAPTER_LIMIT} chapters</strong>.{" "}
+            <Link href="/pricing" className="font-semibold underline hover:no-underline">
+              Upgrade to Pro
+            </Link>{" "}
+            to unlock all {chapters.length} chapters.
+          </p>
+        </div>
+      )}
+
       <ul className="space-y-3">
         {chapters.map((c, i) => {
           const cp = state.chapters[c.slug];
@@ -80,39 +98,66 @@ function StudyIndex() {
             cp && cp.practiceTotal > 0
               ? Math.round((cp.practiceCorrect / cp.practiceTotal) * 100)
               : null;
+          const locked = !isPro && i >= FREE_CHAPTER_LIMIT;
           return (
             <li key={c.slug}>
-              <Link
-                href={`/study/${c.slug}`}
-                className="ud-card p-5 flex items-center gap-4 hover:border-[var(--color-muted)] transition-colors"
-              >
-                <span className="text-2xl shrink-0" aria-hidden>
-                  {CHAPTER_EMOJI[c.slug] ?? "📖"}
-                </span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-muted)]">
-                      Chapter {i + 1}
-                    </span>
-                    {cp?.read && (
-                      <span className="ud-chip ud-chip-success">Read</span>
-                    )}
+              {locked ? (
+                <Link
+                  href="/pricing"
+                  className="ud-card p-5 flex items-center gap-4 opacity-60 hover:opacity-80 transition-opacity cursor-pointer"
+                >
+                  <span className="text-2xl shrink-0" aria-hidden>
+                    {CHAPTER_EMOJI[c.slug] ?? "📖"}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-muted)]">
+                        Chapter {i + 1}
+                      </span>
+                      <span className="ud-chip bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">Pro</span>
+                    </div>
+                    <h2 className="font-bold text-[var(--color-ink)] mt-0.5 leading-snug">
+                      {c.title}
+                    </h2>
+                    <p className="text-xs text-[var(--color-muted)] mt-1">
+                      {qs} practice questions
+                    </p>
                   </div>
-                  <h2 className="font-bold text-[var(--color-ink)] mt-0.5 leading-snug">
-                    {c.title}
-                  </h2>
-                  <p className="text-xs text-[var(--color-muted)] mt-1">
-                    {qs} practice questions
-                  </p>
-                </div>
-                <div className="hidden sm:block w-40 shrink-0">
-                  <ProgressBar value={mastery ?? 0} />
-                  <p className="text-xs text-[var(--color-muted)] mt-1.5 text-right">
-                    {mastery !== null ? `${mastery}% mastery` : "—"}
-                  </p>
-                </div>
-                <span className="text-[var(--color-muted)] text-xl">›</span>
-              </Link>
+                  <span className="text-xl">🔒</span>
+                </Link>
+              ) : (
+                <Link
+                  href={`/study/${c.slug}`}
+                  className="ud-card p-5 flex items-center gap-4 hover:border-[var(--color-muted)] transition-colors"
+                >
+                  <span className="text-2xl shrink-0" aria-hidden>
+                    {CHAPTER_EMOJI[c.slug] ?? "📖"}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-muted)]">
+                        Chapter {i + 1}
+                      </span>
+                      {cp?.read && (
+                        <span className="ud-chip ud-chip-success">Read</span>
+                      )}
+                    </div>
+                    <h2 className="font-bold text-[var(--color-ink)] mt-0.5 leading-snug">
+                      {c.title}
+                    </h2>
+                    <p className="text-xs text-[var(--color-muted)] mt-1">
+                      {qs} practice questions
+                    </p>
+                  </div>
+                  <div className="hidden sm:block w-40 shrink-0">
+                    <ProgressBar value={mastery ?? 0} />
+                    <p className="text-xs text-[var(--color-muted)] mt-1.5 text-right">
+                      {mastery !== null ? `${mastery}% mastery` : "—"}
+                    </p>
+                  </div>
+                  <span className="text-[var(--color-muted)] text-xl">›</span>
+                </Link>
+              )}
             </li>
           );
         })}

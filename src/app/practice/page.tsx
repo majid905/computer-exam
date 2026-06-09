@@ -9,6 +9,8 @@ import { RequireAuth } from "@/components/app/RequireAuth";
 import { useAuth } from "@/context/AuthContext";
 import type { Chapter, Question } from "@/lib/types";
 
+const FREE_CHAPTER_LIMIT = 2;
+
 type MockTest = {
   id: number;
   title: string;
@@ -30,7 +32,9 @@ export default function PracticeIndexPage() {
 function PracticeIndex() {
   const [state] = useUserState();
   const { subscription } = useAuth();
+  const isPro = !!(subscription && subscription.status === "active");
   const [chapters, setChapters] = useState<Chapter[]>([]);
+  const [freeChapterSlugs, setFreeChapterSlugs] = useState<Set<string>>(new Set());
   const [questionCounts, setQuestionCounts] = useState<Record<string, number>>({});
   const [mockTests, setMockTests] = useState<MockTest[]>([]);
   const [unlockedIds, setUnlockedIds] = useState<Set<number>>(new Set());
@@ -46,6 +50,8 @@ function PracticeIndex() {
           pageEnd: 10,
         }));
         setChapters(mapped);
+        // Track which slugs are free (first FREE_CHAPTER_LIMIT by original order)
+        setFreeChapterSlugs(new Set(mapped.slice(0, FREE_CHAPTER_LIMIT).map((c) => c.slug)));
         Promise.all(
           data.map(async (c: any) => {
             const res = await fetch(`/api/practice-questions/by-chapter/${c.id}`);
@@ -152,6 +158,19 @@ function PracticeIndex() {
         </section>
       )}
 
+      {!isPro && (
+        <div className="mb-4 flex items-center gap-3 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 dark:border-amber-700/50 dark:bg-amber-900/20">
+          <span className="text-xl">🔒</span>
+          <p className="text-sm text-amber-900 dark:text-amber-200">
+            Free plan includes the first <strong>{FREE_CHAPTER_LIMIT} chapters</strong>.{" "}
+            <Link href="/pricing" className="font-semibold underline hover:no-underline">
+              Upgrade to Pro
+            </Link>{" "}
+            to practice all chapters.
+          </p>
+        </div>
+      )}
+
       <h2 className="text-sm font-bold uppercase tracking-wider text-[var(--color-muted)] mb-3">
         Chapters
       </h2>
@@ -163,28 +182,45 @@ function PracticeIndex() {
             cp && cp.practiceTotal > 0
               ? Math.round((cp.practiceCorrect / cp.practiceTotal) * 100)
               : null;
+          const locked = !isPro && !freeChapterSlugs.has(c.slug);
           return (
             <li key={c.slug}>
-              <Link
-                href={`/practice/${c.slug}`}
-                className="ud-card p-4 flex items-center gap-3 hover:border-[var(--color-muted)] transition-colors"
-              >
-                <span className="text-2xl" aria-hidden>
-                  {CHAPTER_EMOJI[c.slug] ?? "📖"}
-                </span>
-                <div className="flex-1 min-w-0">
-                  <h2 className="font-bold text-[var(--color-ink)] leading-snug">
-                    {c.title}
-                  </h2>
-                  <p className="text-xs text-[var(--color-muted)] mt-0.5">
-                    {qs} questions ·{" "}
-                    {mastery !== null ? `${mastery}% mastery` : "Untried"}
-                  </p>
-                </div>
-                <span className="ud-btn ud-btn-secondary ud-btn-sm">
-                  Drill
-                </span>
-              </Link>
+              {locked ? (
+                <Link
+                  href="/pricing"
+                  className="ud-card p-4 flex items-center gap-3 opacity-60 hover:opacity-80 transition-opacity"
+                >
+                  <span className="text-2xl" aria-hidden>{CHAPTER_EMOJI[c.slug] ?? "📖"}</span>
+                  <div className="flex-1 min-w-0">
+                    <h2 className="font-bold text-[var(--color-ink)] leading-snug">{c.title}</h2>
+                    <p className="text-xs text-[var(--color-muted)] mt-0.5">
+                      {qs} questions · <span className="text-amber-600 dark:text-amber-400">Pro only</span>
+                    </p>
+                  </div>
+                  <span className="text-xl">🔒</span>
+                </Link>
+              ) : (
+                <Link
+                  href={`/practice/${c.slug}`}
+                  className="ud-card p-4 flex items-center gap-3 hover:border-[var(--color-muted)] transition-colors"
+                >
+                  <span className="text-2xl" aria-hidden>
+                    {CHAPTER_EMOJI[c.slug] ?? "📖"}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <h2 className="font-bold text-[var(--color-ink)] leading-snug">
+                      {c.title}
+                    </h2>
+                    <p className="text-xs text-[var(--color-muted)] mt-0.5">
+                      {qs} questions ·{" "}
+                      {mastery !== null ? `${mastery}% mastery` : "Untried"}
+                    </p>
+                  </div>
+                  <span className="ud-btn ud-btn-secondary ud-btn-sm">
+                    Drill
+                  </span>
+                </Link>
+              )}
             </li>
           );
         })}

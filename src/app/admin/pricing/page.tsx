@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { DataTable } from "@/components/admin/DataTable";
 import { AddEditModal } from "@/components/admin/AddEditModal";
+import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import type { FieldDef } from "@/components/admin/AddEditModal";
 
 const FIELDS: FieldDef[] = [
@@ -20,6 +21,7 @@ export default function AdminPricingPage() {
   const [loading, setLoading] = useState(true);
   const [editItem, setEditItem] = useState<any | null>(null);
   const [showAdd, setShowAdd] = useState(false);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
 
   const [featurePlanId, setFeaturePlanId] = useState<number | null>(null);
   const [features, setFeatures] = useState<any[]>([]);
@@ -37,6 +39,17 @@ export default function AdminPricingPage() {
   useEffect(() => {
     load();
   }, []);
+
+  async function handleDelete(id: number) {
+    const res = await fetch(`/api/pricing/${id}/`, { method: "DELETE" });
+    if (res.ok) {
+      setItems((prev) => prev.filter((i) => i.id !== id));
+    } else {
+      const err = await res.json().catch(() => ({}));
+      alert(err.error || "Failed to delete pricing plan");
+    }
+    setDeleteId(null);
+  }
 
   async function handleSave(values: Record<string, any>) {
     const payload = {
@@ -133,6 +146,7 @@ export default function AdminPricingPage() {
             <div className="flex gap-2">
               <button onClick={() => setEditItem(row)} className="text-[var(--color-brand)] hover:underline text-xs font-semibold">Edit</button>
               <button onClick={() => { setFeaturePlanId(row.id); loadFeatures(row.id); }} className="text-[var(--color-accent)] hover:underline text-xs font-semibold">Features</button>
+              <button onClick={() => setDeleteId(row.id)} className="text-[var(--color-danger)] hover:underline text-xs font-semibold">Delete</button>
             </div>
           )}
         />
@@ -189,6 +203,14 @@ export default function AdminPricingPage() {
       )}
 
       <AddEditModal open={showAdd || editItem !== null} title={editItem ? "Edit Pricing Plan" : "Add Pricing Plan"} fields={FIELDS} data={editItem ?? undefined} onSave={handleSave} onClose={() => { setShowAdd(false); setEditItem(null); }} />
+
+      <ConfirmDialog
+        open={deleteId !== null}
+        title="Delete Pricing Plan"
+        message="Are you sure you want to delete this pricing plan? This cannot be undone."
+        onConfirm={() => deleteId && handleDelete(deleteId)}
+        onCancel={() => setDeleteId(null)}
+      />
     </div>
   );
 }

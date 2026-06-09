@@ -1,11 +1,16 @@
 import { NextResponse } from "next/server";
-import { listChapters, createChapter } from "@/lib/backend";
+import { listChapters, listAllChapters, createChapter } from "@/lib/backend";
+import { getAuthUser } from "@/lib/auth";
 
 export const runtime = "nodejs";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const chapters = await listChapters();
+    // Admin sees all chapters (including inactive); regular users see only active
+    const auth = await getAuthUser();
+    const chapters = auth?.role === "admin"
+      ? await listAllChapters()
+      : await listChapters();
     return NextResponse.json(chapters);
   } catch (error: any) {
     console.error("[GET /api/chapters] error:", error);

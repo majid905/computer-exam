@@ -4,6 +4,7 @@ export const NAV_TOPICS = [
   { href: "/practice", label: "Practice" },
   { href: "/mock-exam", label: "Mock Exam" },
   { href: "/progress", label: "Progress" },
+  { href: "/dictionary", label: "Glossary" },
 ];
 
 export const NAV_SECONDARY = [

@@ -580,6 +580,10 @@ export async function listChapters() {
   return query<Chapter>(`SELECT * FROM chapters WHERE status = 'active' ORDER BY id`);
 }
 
+export async function listAllChapters() {
+  return query<Chapter>(`SELECT * FROM chapters ORDER BY id`);
+}
+
 export async function getChapterById(id: number) {
   const rows = await query<Chapter>(`SELECT * FROM chapters WHERE id = ? LIMIT 1`, [id]);
   return rows[0] || null;
@@ -625,6 +629,10 @@ export async function deleteChapter(id: number) {
 
 export async function listQuestions() {
   return query<Question>(`SELECT * FROM questions WHERE status = 'active' ORDER BY id`);
+}
+
+export async function listAllQuestions() {
+  return query<Question>(`SELECT * FROM questions ORDER BY id`);
 }
 
 export async function getQuestionById(id: number) {
@@ -1831,6 +1839,10 @@ export async function listPracticeQuestions() {
   return query<PracticeQuestion>(`SELECT * FROM practice_questions WHERE status = 'active' ORDER BY id`);
 }
 
+export async function listAllPracticeQuestions() {
+  return query<PracticeQuestion>(`SELECT * FROM practice_questions ORDER BY id`);
+}
+
 export async function getPracticeQuestionsByChapterId(chapterId: number) {
   return query<PracticeQuestion>(`SELECT * FROM practice_questions WHERE chapter_id = ? AND status = 'active' ORDER BY id`, [chapterId]);
 }
@@ -1950,7 +1962,6 @@ export async function updateUserPassword(id: number, passwordHash: string) {
 }
 
 export async function createPasswordReset(email: string, tokenHash: string, expiresAt: string) {
-  // Invalidate any prior tokens for this email, then store the new one.
   await execute(`DELETE FROM password_resets WHERE email = ?`, [email]);
   await execute(
     `INSERT INTO password_resets (email, token_hash, expires_at) VALUES (?, ?, ?)`,
@@ -1958,8 +1969,6 @@ export async function createPasswordReset(email: string, tokenHash: string, expi
   );
 }
 
-// Returns the matching, unexpired reset row (or null). `nowStr` is the current
-// time formatted as 'YYYY-MM-DD HH:MM:SS' for lexicographic comparison.
 export async function getValidPasswordReset(email: string, tokenHash: string, nowStr: string) {
   const rows = await query<{ id: number; email: string; expires_at: string }>(
     `SELECT id, email, expires_at FROM password_resets
@@ -1971,4 +1980,99 @@ export async function getValidPasswordReset(email: string, tokenHash: string, no
 
 export async function deletePasswordResetsForEmail(email: string) {
   await execute(`DELETE FROM password_resets WHERE email = ?`, [email]);
+}
+
+// ===================== DICTIONARY TERMS =====================
+
+export type DictionaryTerm = {
+  id: number;
+  title: string;
+  slug: string;
+  short_definition: string;
+  full_description: string | null;
+  ai_explanation: string | null;
+  related_terms: string | null;
+  quiz_question: string | null;
+  quiz_options: string | null;
+  quiz_answer: number | null;
+  seo_title: string | null;
+  seo_description: string | null;
+  access_level: "free" | "login" | "pro";
+  status: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export async function listDictionaryTerms() {
+  return query<DictionaryTerm>(
+    `SELECT id, title, slug, short_definition, access_level, seo_title, seo_description, status
+     FROM dictionary_terms WHERE status = 'active'
+     ORDER BY CASE access_level WHEN 'free' THEN 0 WHEN 'login' THEN 1 ELSE 2 END, title ASC`,
+  );
+}
+
+export async function getDictionaryTermBySlug(slug: string) {
+  const rows = await query<DictionaryTerm>(
+    `SELECT * FROM dictionary_terms WHERE slug = ? AND status = 'active' LIMIT 1`,
+    [slug],
+  );
+  return rows[0] || null;
+}
+
+export async function listDictionaryTermSlugs() {
+  return query<{ slug: string }>(
+    `SELECT slug FROM dictionary_terms WHERE status = 'active'`,
+  );
+}
+
+export async function createDictionaryTerm(data: Partial<DictionaryTerm>) {
+  const result = await execute(
+    `INSERT INTO dictionary_terms (title, slug, short_definition, full_description, ai_explanation, related_terms, quiz_question, quiz_options, quiz_answer, seo_title, seo_description, access_level, status)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [data.title, data.slug, data.short_definition, data.full_description ?? null, data.ai_explanation ?? null, data.related_terms ?? null, data.quiz_question ?? null, data.quiz_options ?? null, data.quiz_answer ?? null, data.seo_title ?? null, data.seo_description ?? null, data.access_level ?? "pro", data.status ?? "active"],
+  );
+  return result.insertId as number;
+}
+
+export async function updateDictionaryTerm(id: number, data: Partial<DictionaryTerm>) {
+  const fields: string[] = [];
+  const values: any[] = [];
+  for (const [key, value] of Object.entries(data)) {
+    if (value !== undefined && key !== "id") {
+      fields.push(`${key} = ?`);
+      values.push(value);
+    }
+  }
+  if (fields.length === 0) return;
+  values.push(id);
+  await query(`UPDATE dictionary_terms SET ${fields.join(", ")} WHERE id = ?`, values);
+}
+
+export async function deleteDictionaryTerm(id: number) {
+  await query(`DELETE FROM dictionary_terms WHERE id = ?`, [id]);
+}
+
+export async function listAllDictionaryTerms() {
+  return query<DictionaryTerm>(
+    `SELECT id, title, slug, short_definition, access_level, seo_title, seo_description, status, created_at
+     FROM dictionary_terms ORDER BY title ASC`,
+  );
+}
+
+export async function getDictionaryTermById(id: number) {
+  const rows = await query<DictionaryTerm>(
+    `SELECT * FROM dictionary_terms WHERE id = ? LIMIT 1`,
+    [id],
+  );
+  return rows[0] || null;
+}
+
+export async function hasActiveSubscription(userId: number): Promise<boolean> {
+  const rows = await query<{ id: number }>(
+    `SELECT id FROM subscriptions
+     WHERE user_id = ? AND status = 'active' AND end_date > datetime('now')
+     LIMIT 1`,
+    [userId],
+  );
+  return rows.length > 0;
 }

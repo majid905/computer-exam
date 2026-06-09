@@ -1,11 +1,15 @@
 import { NextResponse } from "next/server";
-import { listQuestions, getOptionsByQuestionId, createQuestion, createQuestionOption } from "@/lib/backend";
+import { listQuestions, listAllQuestions, getOptionsByQuestionId, createQuestion, createQuestionOption } from "@/lib/backend";
+import { getAuthUser } from "@/lib/auth";
 
 export const runtime = "nodejs";
 
 export async function GET() {
   try {
-    const questions = await listQuestions();
+    const auth = await getAuthUser();
+    const questions = auth?.role === "admin"
+      ? await listAllQuestions()
+      : await listQuestions();
     const questionsWithOptions = await Promise.all(
       questions.map(async (q) => {
         const options = await getOptionsByQuestionId(q.id);

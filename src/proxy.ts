@@ -21,6 +21,30 @@ const PUBLIC_PATHS = [
   "/contact",
   "/about",
   "/blog",
+  // SEO landing pages — must be public
+  "/canadian-citizenship-practice-test",
+  "/citizenship-test-questions",
+  "/discover-canada-practice-test",
+  "/free-citizenship-test",
+  "/citizenship-test-ontario",
+  "/citizenship-test-toronto",
+  // Dictionary glossary — public for SEO
+  "/dictionary",
+  // New SEO landing pages (2025)
+  "/canadian-citizenship-test",
+  "/canadian-citizenship-test-practice",
+  "/canadian-citizenship-test-questions-and-answers",
+  "/canadian-citizenship-test-mock-exam",
+  "/discover-canada-summary",
+  "/discover-canada-important-questions",
+  "/how-to-pass-canadian-citizenship-test",
+  "/how-hard-is-the-canadian-citizenship-test",
+  "/canadian-citizenship-eligibility",
+  "/canadian-citizenship-calculator",
+  "/canadian-citizenship-interview-questions",
+  "/ai-citizenship-coach",
+  "/citizenship-dictionary",
+  "/citizenship-faq",
 ];
 
 const PUBLIC_API_PATHS = [
@@ -28,9 +52,8 @@ const PUBLIC_API_PATHS = [
   "/api/auth/register",
   "/api/auth/forgot-password",
   "/api/auth/reset-password",
-  // "Who am I?" — must be reachable by guests so it can answer { user: null }
-  // (200) instead of the middleware returning 401, which logs a console error.
   "/api/auth/me",
+  "/api/auth/google",
   "/api/faqs",
   "/api/languages",
   "/api/provinces",
@@ -50,6 +73,10 @@ const PUBLIC_API_PATHS = [
   "/api/site-stats",
   "/api/stripe-public-key",
   "/api/stripe-webhook",
+  "/api/site-stats",
+  "/api/practice-chapters",
+  "/api/practice-questions",
+  "/api/dictionary",
 ];
 
 // SEO / metadata routes that crawlers must reach without authentication.
@@ -77,7 +104,7 @@ function isPublicPath(pathname: string): boolean {
   return false;
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (isPublicPath(pathname)) {

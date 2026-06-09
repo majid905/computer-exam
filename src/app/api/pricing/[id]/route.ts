@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getPricingPlanById, updatePricingPlan, getFeaturesByPlanId } from "@/lib/backend";
+import { getPricingPlanById, updatePricingPlan, deletePricingPlan, getFeaturesByPlanId } from "@/lib/backend";
 
 export const runtime = "nodejs";
 
@@ -18,4 +18,14 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   const body = await request.json();
   await updatePricingPlan(Number(id), body);
   return NextResponse.json({ message: "Pricing plan updated" });
+}
+
+export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const plan = await getPricingPlanById(Number(id));
+  if (!plan) {
+    return NextResponse.json({ error: "Plan not found" }, { status: 404 });
+  }
+  await deletePricingPlan(Number(id));
+  return NextResponse.json({ message: "Pricing plan deleted" });
 }

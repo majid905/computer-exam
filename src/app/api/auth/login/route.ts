@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { getUserByEmail } from "@/lib/backend";
 import { verifyPassword, createToken } from "@/lib/auth";
-import { cookies } from "next/headers";
 
 export const runtime = "nodejs";
 
@@ -46,15 +45,6 @@ export async function POST(request: Request) {
       role: user.role,
     });
 
-    const cookieStore = await cookies();
-    cookieStore.set("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 7, // 7 days
-      path: "/",
-    });
-
     // Update last login
     const { updateUser } = await import("@/lib/backend");
     await updateUser(user.id, {
@@ -62,11 +52,22 @@ export async function POST(request: Request) {
     });
 
     const { password: _pw, ...safeUser } = user;
-    return NextResponse.json({
+
+    // Set cookie directly on the response — next/headers cookies().set()
+    // does not attach to the response on Cloudflare Workers
+    const response = NextResponse.json({
       user: safeUser,
       token,
       message: "Login successful",
     });
+    response.cookies.set("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 7,
+      path: "/",
+    });
+    return response;
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message || "Login failed" },

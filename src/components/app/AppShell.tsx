@@ -2,11 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useUserState } from "@/lib/storage";
 import { useAuth } from "@/context/AuthContext";
 import { NAV_TOPICS, NAV_SECONDARY } from "@/lib/nav";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
+import { useSessionTimeout } from "@/hooks/useSessionTimeout";
+
+const PUBLIC_NAV = [
+  { href: "/dictionary", label: "Glossary" },
+];
 
 function PasspilotMark({ size = 28 }: { size?: number }) {
   return (
@@ -23,6 +28,31 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [state] = useUserState();
   const { user, logout, loading } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [showTimeoutWarning, setShowTimeoutWarning] = useState(false);
+
+  // 30-minute inactivity timeout
+  useSessionTimeout(!!user, logout);
+
+  // Listen for the warning event fired 2 min before logout
+  useEffect(() => {
+    function onWarning() { setShowTimeoutWarning(true); }
+    window.addEventListener("session:warning", onWarning);
+    return () => window.removeEventListener("session:warning", onWarning);
+  }, []);
+
+  // Hide warning when user acts (any activity resets the timer)
+  useEffect(() => {
+    if (!showTimeoutWarning) return;
+    function onActivity() { setShowTimeoutWarning(false); }
+    window.addEventListener("mousemove", onActivity, { once: true });
+    window.addEventListener("keydown", onActivity, { once: true });
+    window.addEventListener("click", onActivity, { once: true });
+    return () => {
+      window.removeEventListener("mousemove", onActivity);
+      window.removeEventListener("keydown", onActivity);
+      window.removeEventListener("click", onActivity);
+    };
+  }, [showTimeoutWarning]);
 
   const hideNav =
     pathname === "/" ||
@@ -38,6 +68,28 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex flex-col min-h-screen">
+      {/* Session timeout warning toast */}
+      {showTimeoutWarning && (
+        <div className="fixed bottom-5 right-5 z-50 flex items-center gap-3 rounded-xl border border-amber-300 bg-amber-50 px-5 py-3 shadow-lg dark:border-amber-600 dark:bg-amber-900/80">
+          <span className="text-xl">⏱️</span>
+          <div>
+            <p className="text-sm font-semibold text-amber-900 dark:text-amber-100">
+              Session expiring soon
+            </p>
+            <p className="text-xs text-amber-700 dark:text-amber-300">
+              You will be logged out in 2 minutes due to inactivity.
+            </p>
+          </div>
+          <button
+            onClick={() => setShowTimeoutWarning(false)}
+            className="ml-2 text-amber-600 hover:text-amber-900 dark:text-amber-400 dark:hover:text-amber-100"
+            aria-label="Dismiss"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {!hideNav && (
         <header className="sticky top-0 z-30 backdrop-blur bg-[var(--color-surface)]/85 border-b">
           <div className="mx-auto max-w-6xl px-5 h-14 flex items-center justify-between">
@@ -55,7 +107,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
             {/* Desktop nav */}
             <nav className="hidden md:flex items-center gap-1">
-              {NAV_TOPICS.map((item) => {
+              {(user ? NAV_TOPICS : PUBLIC_NAV).map((item) => {
                 const active = item.href === "/" ? pathname === "/" : pathname?.startsWith(item.href);
                 return (
                   <Link
@@ -71,7 +123,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   </Link>
                 );
               })}
-              {NAV_SECONDARY.map((item) => {
+              {user && NAV_SECONDARY.map((item) => {
                 const active = pathname?.startsWith(item.href);
                 return (
                   <Link
@@ -146,7 +198,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           {/* Mobile nav */}
           {mobileOpen && (
             <div className="md:hidden border-t bg-[var(--color-surface)] px-5 py-3 space-y-1">
-              {NAV_TOPICS.map((item) => {
+              {(user ? NAV_TOPICS : PUBLIC_NAV).map((item) => {
                 const active = item.href === "/" ? pathname === "/" : pathname?.startsWith(item.href);
                 return (
                   <Link
@@ -163,7 +215,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   </Link>
                 );
               })}
-              {NAV_SECONDARY.map((item) => {
+              {user && NAV_SECONDARY.map((item) => {
                 const active = pathname?.startsWith(item.href);
                 return (
                   <Link
