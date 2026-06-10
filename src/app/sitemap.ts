@@ -1,24 +1,18 @@
 import { MetadataRoute } from "next";
+import { listBlogs, listChapters, listDictionaryTermSlugs } from "@/lib/backend";
 
 const BASE_URL = "https://www.passpilot.ca";
 
-async function fetchSlugs(endpoint: string, key: string): Promise<string[]> {
-  try {
-    const res = await fetch(`${BASE_URL}/api/${endpoint}`, { next: { revalidate: 3600 } });
-    if (!res.ok) return [];
-    const data = await res.json();
-    return Array.isArray(data) ? data.map((item: any) => item[key]).filter(Boolean) : [];
-  } catch {
-    return [];
-  }
-}
-
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [blogSlugs, chapterSlugs, dictionarySlugs] = await Promise.all([
-    fetchSlugs("blogs", "slug"),
-    fetchSlugs("chapters", "slug"),
-    fetchSlugs("dictionary", "slug"),
+  const [blogs, chapters, dictionaryTerms] = await Promise.all([
+    listBlogs().catch(() => []),
+    listChapters().catch(() => []),
+    listDictionaryTermSlugs().catch(() => []),
   ]);
+
+  const blogSlugs = blogs.map((b) => b.slug).filter(Boolean);
+  const chapterSlugs = chapters.map((c) => c.slug).filter(Boolean);
+  const dictionarySlugs = dictionaryTerms.map((d) => d.slug).filter(Boolean);
 
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: BASE_URL, lastModified: new Date(), changeFrequency: "weekly", priority: 1 },
