@@ -83,7 +83,8 @@ export async function GET(request: Request) {
 
   // Must set cookie directly on the redirect response —
   // next/headers cookies() doesn't attach to NextResponse.redirect()
-  const response = NextResponse.redirect(`${origin}/app`);
+  const redirectTo = user.role === "client" ? "/app" : "/admin";
+  const response = NextResponse.redirect(`${origin}${redirectTo}`);
   response.cookies.set("token", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
