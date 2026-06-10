@@ -1539,6 +1539,18 @@ export async function listBlogs() {
   return query<Blog>(`SELECT * FROM blogs WHERE status = 'active' ORDER BY created_at DESC`);
 }
 
+// Like listBlogs() but WITHOUT the heavy `content` HTML column. The public blog
+// pages (listing, sitemap, llms.txt, related-posts) only need metadata, so this
+// avoids pulling every article's full body across D1 on every request — which
+// was needless CPU/memory on each render. Use listBlogs() only when you need the
+// content (e.g. the admin API).
+export async function listBlogsMeta() {
+  return query<Blog>(
+    `SELECT id, title, slug, image, short_description, author_id, status, created_at, updated_at
+     FROM blogs WHERE status = 'active' ORDER BY created_at DESC`,
+  );
+}
+
 export async function getBlogById(id: number) {
   const rows = await query<Blog>(`SELECT * FROM blogs WHERE id = ? LIMIT 1`, [id]);
   return rows[0] || null;

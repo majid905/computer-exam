@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { listBlogs } from "@/lib/backend";
+import { listBlogsMeta } from "@/lib/backend";
 
 // DB is only available at request time on the Worker.
 export const dynamic = "force-dynamic";
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 };
 
 export default async function BlogIndexPage() {
-  const blogs = await listBlogs();
+  const blogs = await listBlogsMeta();
 
   return (
     <div className="mx-auto max-w-5xl px-5 py-12">

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getBlogBySlug, listBlogs } from "@/lib/backend";
+import { getBlogBySlug, listBlogsMeta } from "@/lib/backend";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { articleSchema, SITE_URL, OG_IMAGE } from "@/lib/seo";
 
@@ -84,7 +84,7 @@ export default async function BlogDetailPage({
   if (!blog) notFound();
 
   // Other posts to cross-link to (internal linking for SEO).
-  const allBlogs = await listBlogs();
+  const allBlogs = await listBlogsMeta();
   const related = relatedPosts(blog, allBlogs);
 
   return (

@@ -20,6 +20,13 @@
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   },
+  // Workers Logs: retains invocation logs (incl. CPU time + exceptions) so a
+  // runtime 1102 ("exceeded resource limits") can be inspected after the fact
+  // instead of only seeing Cloudflare's generic error page. Works on Free plan.
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  },
   "d1_databases": [
     {
       "binding": "DB",
