@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getUserByEmail, createUser } from "@/lib/backend";
+import { getUserByEmail, createUser, getGoogleOAuthConfig } from "@/lib/backend";
 import { createToken } from "@/lib/auth";
 
 export const runtime = "nodejs";
@@ -14,8 +14,9 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${origin}/login?error=google_denied`);
   }
 
-  const clientId = process.env.GOOGLE_CLIENT_ID;
-  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  const dbConfig = await getGoogleOAuthConfig().catch(() => null);
+  const clientId = dbConfig?.client_id || process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = dbConfig?.client_secret || process.env.GOOGLE_CLIENT_SECRET;
   if (!clientId || !clientSecret) {
     return NextResponse.redirect(`${origin}/login?error=google_not_configured`);
   }

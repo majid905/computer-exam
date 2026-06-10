@@ -1183,6 +1183,47 @@ export async function updateStripeConfig(data: Partial<StripeConfig>) {
   return result.insertId as number;
 }
 
+// ===================== GOOGLE OAUTH CONFIG =====================
+
+export type GoogleOAuthConfig = {
+  id: number;
+  client_id: string | null;
+  client_secret: string | null;
+  status: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export async function getGoogleOAuthConfig() {
+  const rows = await query<GoogleOAuthConfig>(
+    `SELECT * FROM google_oauth_configs ORDER BY id DESC LIMIT 1`,
+  );
+  return rows[0] || null;
+}
+
+export async function updateGoogleOAuthConfig(data: Partial<GoogleOAuthConfig>) {
+  const existing = await getGoogleOAuthConfig();
+  if (existing) {
+    const fields: string[] = [];
+    const values: any[] = [];
+    for (const [key, value] of Object.entries(data)) {
+      if (value !== undefined && key !== "id") {
+        fields.push(`${key} = ?`);
+        values.push(value);
+      }
+    }
+    if (fields.length === 0) return existing.id;
+    values.push(existing.id);
+    await query(`UPDATE google_oauth_configs SET ${fields.join(", ")} WHERE id = ?`, values);
+    return existing.id;
+  }
+  const result = await execute(
+    `INSERT INTO google_oauth_configs (client_id, client_secret, status) VALUES (?, ?, ?)`,
+    [data.client_id ?? null, data.client_secret ?? null, data.status ?? "active"],
+  );
+  return result.insertId as number;
+}
+
 // ===================== ACTIVE SUBSCRIPTION =====================
 
 export async function getActiveSubscriptionByUser(userId: number) {

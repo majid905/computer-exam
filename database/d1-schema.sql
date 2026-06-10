@@ -426,3 +426,14 @@ CREATE TABLE `password_resets` (
 );
 CREATE INDEX IF NOT EXISTS `idx_password_resets_email` ON `password_resets` (`email`);
 CREATE INDEX IF NOT EXISTS `idx_password_resets_token` ON `password_resets` (`token_hash`);
+
+DROP TABLE IF EXISTS `google_oauth_configs`;
+CREATE TABLE `google_oauth_configs` (
+  `id` INTEGER PRIMARY KEY AUTOINCREMENT,
+  `client_id` TEXT,
+  `client_secret` TEXT,
+  `status` TEXT NOT NULL DEFAULT 'active',
+  `created_at` TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+

@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
+import { getGoogleOAuthConfig } from "@/lib/backend";
 
 export const runtime = "nodejs";
 
 export async function GET(request: Request) {
-  const clientId = process.env.GOOGLE_CLIENT_ID;
-  if (!clientId) {
+  const dbConfig = await getGoogleOAuthConfig().catch(() => null);
+  const clientId = dbConfig?.client_id || process.env.GOOGLE_CLIENT_ID;
+  if (!clientId || dbConfig?.status === "inactive") {
     return NextResponse.json({ error: "Google login not configured" }, { status: 500 });
   }
 
