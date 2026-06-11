@@ -65,7 +65,7 @@ type AuthContextType = {
   user: User | null;
   subscription: Subscription | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  login: (email: string, password: string) => Promise<{ success: boolean; role?: string; error?: string }>;
   register: (data: { email: string; password: string; full_name: string; user_name?: string }) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -81,18 +81,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   async function refreshUser() {
-    try {
-      const res = await fetch("/api/auth/me/");
-      if (res.ok) {
-        const data = await res.json();
-        setUser(data.user);
-        return data.user;
-      } else {
-        setUser(null);
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const res = await fetch("/api/auth/me/");
+        if (res.ok) {
+          const data = await res.json();
+          setUser(data.user);
+          return data.user;
+        }
+        if (res.status === 401) {
+          setUser(null);
+          return null;
+        }
+        // 5xx or other transient error — retry after short delay
+        if (attempt < 2) await new Promise((r) => setTimeout(r, 600 * (attempt + 1)));
+      } catch {
+        if (attempt < 2) await new Promise((r) => setTimeout(r, 600 * (attempt + 1)));
       }
-    } catch {
-      setUser(null);
     }
+    setUser(null);
+    return null;
   }
 
   async function refreshSubscription() {
@@ -184,7 +192,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await refreshSubscription();
       await syncSettings();
       await syncProgress(data.user.id);
-      return { success: true };
+      return { success: true, role: data.user.role as string };
     } catch (err: any) {
       return { success: false, error: err.message || "Network error" };
     }

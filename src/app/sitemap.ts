@@ -1,24 +1,21 @@
 import { MetadataRoute } from "next";
+import { listBlogs, listChapters, listDictionaryTermSlugs, listFaqs } from "@/lib/backend";
+import { toSlug } from "@/lib/slug";
 
 const BASE_URL = "https://www.passpilot.ca";
 
-async function fetchSlugs(endpoint: string, key: string): Promise<string[]> {
-  try {
-    const res = await fetch(`${BASE_URL}/api/${endpoint}`, { next: { revalidate: 3600 } });
-    if (!res.ok) return [];
-    const data = await res.json();
-    return Array.isArray(data) ? data.map((item: any) => item[key]).filter(Boolean) : [];
-  } catch {
-    return [];
-  }
-}
-
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [blogSlugs, chapterSlugs, dictionarySlugs] = await Promise.all([
-    fetchSlugs("blogs", "slug"),
-    fetchSlugs("chapters", "slug"),
-    fetchSlugs("dictionary", "slug"),
+  const [blogs, chapters, dictionaryTerms, faqs] = await Promise.all([
+    listBlogs().catch(() => []),
+    listChapters().catch(() => []),
+    listDictionaryTermSlugs().catch(() => []),
+    listFaqs().catch(() => []),
   ]);
+
+  const blogSlugs = blogs.map((b) => b.slug).filter(Boolean);
+  const chapterSlugs = chapters.map((c) => c.slug).filter(Boolean);
+  const dictionarySlugs = dictionaryTerms.map((d) => d.slug).filter(Boolean);
+  const faqSlugs = faqs.map((f) => toSlug(f.question)).filter(Boolean);
 
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: BASE_URL, lastModified: new Date(), changeFrequency: "weekly", priority: 1 },
@@ -78,5 +75,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.75,
   }));
 
-  return [...staticRoutes, ...blogRoutes, ...chapterRoutes, ...dictionaryRoutes];
+  const faqRoutes: MetadataRoute.Sitemap = faqSlugs.map((slug) => ({
+    url: `${BASE_URL}/faq/${slug}`,
+    lastModified: new Date(),
+    changeFrequency: "monthly",
+    priority: 0.65,
+  }));
+
+  return [...staticRoutes, ...blogRoutes, ...chapterRoutes, ...dictionaryRoutes, ...faqRoutes];
 }
