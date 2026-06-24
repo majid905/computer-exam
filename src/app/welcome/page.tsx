@@ -17,8 +17,8 @@ function useSiteStats() {
   const [stats, setStats] = useState({ questions: 0, chapters: 0, languages: 0, testimonials: 0, mock_test_duration: 45 });
   useEffect(() => {
     fetch("/api/site-stats")
-      .then((r) => r.json())
-      .then((data) => setStats(data))
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => { if (data) setStats(data); })
       .catch(() => {});
   }, []);
   return stats;
@@ -87,7 +87,7 @@ function MarketingNav() {
           >
             Sign in
           </Link>
-          <Link href="/onboarding" className="ud-btn ud-btn-primary ud-btn-sm">
+          <Link href="/register" className="ud-btn ud-btn-primary ud-btn-sm">
             Try free
           </Link>
           <button
@@ -146,7 +146,7 @@ function Hero() {
             and explains every wrong answer in your language.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link href="/onboarding" className="ud-btn ud-btn-primary">
+            <Link href="/register" className="ud-btn ud-btn-primary">
               Start studying — it&apos;s free
             </Link>
             <a href="#how-it-works" className="ud-btn ud-btn-ghost">
@@ -437,7 +437,7 @@ function HowItWorks({ stats }: { stats: any }) {
           ))}
         </ol>
         <div className="mt-10 flex flex-wrap gap-3">
-          <Link href="/onboarding" className="ud-btn ud-btn-primary">
+          <Link href="/register" className="ud-btn ud-btn-primary">
             Take the diagnostic
           </Link>
           <Link href="/mock-exam" className="ud-btn ud-btn-ghost">
@@ -461,8 +461,9 @@ function SocialProof({ stats }: { stats: any }) {
   const [testimonials, setTestimonials] = useState<any[]>([]);
   useEffect(() => {
     fetch("/api/testimonials")
-      .then((r) => r.json())
-      .then((data) => setTestimonials(data));
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => setTestimonials(Array.isArray(data) ? data : []))
+      .catch(() => {});
   }, []);
 
   return (
@@ -488,9 +489,7 @@ function SocialProof({ stats }: { stats: any }) {
               <div className="text-[var(--color-accent)] text-sm tracking-tight mb-3">
                 ★★★★★
               </div>
-              <p className="text-sm text-[var(--color-ink-2)] leading-relaxed italic">
-                "{t.review}"
-              </p>
+              <div className="text-sm text-[var(--color-ink-2)] leading-relaxed italic" dangerouslySetInnerHTML={{ __html: `"${t.review}"` }} />
               <div className="mt-4 flex items-center gap-3">
                 <div className="h-10 w-10 rounded-full bg-[var(--color-brand-soft)] flex items-center justify-center text-[var(--color-brand)] font-bold">
                   {t.name.charAt(0)}
@@ -572,8 +571,9 @@ function Pricing() {
   const [plans, setPlans] = useState<any[]>([]);
   useEffect(() => {
     fetch("/api/pricing")
-      .then((r) => r.json())
-      .then((data) => setPlans(data));
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => setPlans(Array.isArray(data) ? data : []))
+      .catch(() => {});
   }, []);
 
   return (
@@ -613,9 +613,7 @@ function Pricing() {
                 </div>
               </div>
             </div>
-            <p className="text-sm text-[var(--color-muted)] mt-1">
-              {plan.description}
-            </p>
+            <div className="text-sm text-[var(--color-muted)] mt-1" dangerouslySetInnerHTML={{ __html: plan.description }} />
             <ul className="mt-6 space-y-2.5 text-sm">
               {plan.features.map((b: string) => (
                 <li key={b} className="flex gap-2">
@@ -625,7 +623,7 @@ function Pricing() {
               ))}
             </ul>
             <Link
-              href="/onboarding"
+              href="/register"
               className={`ud-btn mt-7 w-full ${i === plans.length - 1 ? "ud-btn-primary" : "ud-btn-ghost"}`}
             >
               {i === plans.length - 1 ? "Start free, upgrade any time" : "Start free"}
@@ -643,8 +641,16 @@ function FAQ() {
   const [items, setItems] = useState<{q: string; a: string}[]>([]);
   useEffect(() => {
     fetch("/api/faqs")
-      .then((r) => r.json())
-      .then((data) => setItems(data.map((f: any) => ({ q: f.question, a: f.answer }))));
+      .then((r) => {
+        if (!r.ok) return [];
+        return r.json();
+      })
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setItems(data.map((f: any) => ({ q: f.question, a: f.answer })));
+        }
+      })
+      .catch(() => {});
   }, []);
   const [openIdx, setOpenIdx] = useState<number | null>(0);
   return (
@@ -680,9 +686,7 @@ function FAQ() {
                   </span>
                 </button>
                 {open && (
-                  <div className="px-5 pb-5 text-sm text-[var(--color-muted)] leading-relaxed">
-                    {it.a}
-                  </div>
+                  <div className="px-5 pb-5 text-sm text-[var(--color-muted)] leading-relaxed" dangerouslySetInnerHTML={{ __html: it.a }} />
                 )}
               </li>
             );
@@ -702,8 +706,8 @@ function ContactSection() {
 
   useEffect(() => {
     fetch("/api/site-contacts")
-      .then((r) => r.json())
-      .then((data) => setContact(data))
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => { if (data) setContact(data); })
       .catch(() => {});
   }, []);
 
@@ -890,7 +894,7 @@ function BlogSection() {
   const [blogs, setBlogs] = useState<any[]>([]);
   useEffect(() => {
     fetch("/api/blogs")
-      .then((r) => r.json())
+      .then((r) => (r.ok ? r.json() : []))
       .then((data) => setBlogs(Array.isArray(data) ? data.slice(0, 3) : []))
       .catch(() => {});
   }, []);
@@ -954,7 +958,7 @@ function FinalCTA() {
           confident. It&apos;s free to start. No card. No catch.
         </p>
         <div className="relative mt-8 flex justify-center gap-3 flex-wrap">
-          <Link href="/onboarding" className="ud-btn ud-btn-accent">
+          <Link href="/register" className="ud-btn ud-btn-accent">
             Start studying — it&apos;s free
           </Link>
           <Link

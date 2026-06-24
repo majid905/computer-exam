@@ -37,7 +37,7 @@ function resizeImageToBase64(file: File, maxSize = 200, quality = 0.6): Promise<
 export default function SettingsPage() {
   const router = useRouter();
   const [state, update] = useUserState();
-  const { user, refreshUser, subscription } = useAuth();
+  const { user, refreshUser, subscription, refreshSubscription } = useAuth();
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState("");
   const [phone, setPhone] = useState("");
@@ -59,10 +59,25 @@ export default function SettingsPage() {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
     if (params.get("subscription") === "success") {
-      setSaveMsg("Payment successful! Your subscription is now active.");
+      const sessionId = params.get("session_id");
       window.history.replaceState({}, "", window.location.pathname);
-      setTimeout(() => setSaveMsg(""), 5000);
+
+      (async () => {
+        if (sessionId) {
+          try {
+            await fetch("/api/confirm-payment", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ sessionId }),
+            });
+          } catch {}
+        }
+        await refreshSubscription();
+        setSaveMsg("Payment successful! Your subscription is now active.");
+        setTimeout(() => setSaveMsg(""), 5000);
+      })();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -142,10 +157,10 @@ export default function SettingsPage() {
   function reset() {
     if (typeof window === "undefined") return;
     if (
-      confirm("Reset all progress, attempts, and onboarding? This can't be undone.")
+      confirm("Reset all progress and attempts? This can't be undone.")
     ) {
       resetState();
-      router.replace("/onboarding");
+      router.replace("/app");
     }
   }
 
@@ -289,7 +304,7 @@ export default function SettingsPage() {
         )}
 
         <div className="mt-4 space-y-2">
-          {plans.map((plan) => (
+          {plans.filter((plan) => plan.price_cents > 0).map((plan) => (
             <div key={plan.id} className="flex items-center justify-between rounded-md border-2 border-[var(--color-border)] px-3 py-2">
               <div>
                 <p className="text-sm font-bold text-[var(--color-ink)]">{plan.title}</p>
@@ -343,7 +358,7 @@ export default function SettingsPage() {
           Reset
         </h2>
         <p className="text-sm text-[var(--color-muted)] mb-4">
-          Clear all progress and start onboarding again.
+          Clear all progress and start fresh.
         </p>
         <button
           className="ud-btn ud-btn-ghost"

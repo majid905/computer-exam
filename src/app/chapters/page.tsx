@@ -45,9 +45,7 @@ export default async function ChaptersPage() {
               </div>
             </div>
             {chapter.description && (
-              <p className="text-sm text-[var(--color-muted)] mt-4">
-                {chapter.description}
-              </p>
+              <div className="text-sm text-[var(--color-muted)] mt-4" dangerouslySetInnerHTML={{ __html: chapter.description }} />
             )}
           </Link>
         ))}

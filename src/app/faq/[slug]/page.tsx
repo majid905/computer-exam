@@ -49,9 +49,7 @@ export default async function FaqSlugPage({
         <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[var(--color-ink)] mb-6">
           {faq.question}
         </h1>
-        <div className="prose max-w-none text-[var(--color-muted)] leading-relaxed whitespace-pre-line">
-          {faq.answer}
-        </div>
+        <div className="prose max-w-none text-[var(--color-muted)] leading-relaxed dark:prose-invert" dangerouslySetInnerHTML={{ __html: faq.answer }} />
       </article>
 
       <div className="mt-10 pt-6 border-t border-[var(--color-border)]">

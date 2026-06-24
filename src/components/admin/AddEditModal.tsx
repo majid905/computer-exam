@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { RichTextEditor } from "./RichTextEditor";
 
 export type FieldDef = {
   key: string;
   label: string;
-  type?: "text" | "textarea" | "number" | "select";
+  type?: "text" | "textarea" | "number" | "select" | "richtext";
   options?: { value: string; label: string }[];
   required?: boolean;
 };
@@ -69,7 +70,12 @@ export function AddEditModal({
                 {field.label}
                 {field.required && <span className="text-[var(--color-danger)]"> *</span>}
               </label>
-              {field.type === "textarea" ? (
+              {field.type === "richtext" ? (
+                <RichTextEditor
+                  value={values[field.key] ?? ""}
+                  onChange={(html) => setValues((v) => ({ ...v, [field.key]: html }))}
+                />
+              ) : field.type === "textarea" ? (
                 <textarea
                   value={values[field.key] ?? ""}
                   onChange={(e) => setValues((v) => ({ ...v, [field.key]: e.target.value }))}

@@ -11,9 +11,65 @@ const FIELDS: FieldDef[] = [
   { key: "slug", label: "Slug", required: true },
   { key: "category_id", label: "Category", type: "select", options: [], required: true },
   { key: "short_description", label: "Short Description", type: "textarea" },
-  { key: "body", label: "Body (JSON summary)", type: "textarea" },
+  { key: "body", label: "Body Content", type: "richtext" },
   { key: "status", label: "Status", type: "select", options: [{ value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }] },
 ];
+
+function bodyJsonToHtml(json: string | null | undefined): string {
+  if (!json) return "";
+  try {
+    const data = typeof json === "string" ? JSON.parse(json) : json;
+    let html = "";
+    if (data.intro) html += `<p>${data.intro}</p>`;
+    if (Array.isArray(data.sections)) {
+      for (const sec of data.sections) {
+        if (sec.heading) html += `<h2>${sec.heading}</h2>`;
+        if (Array.isArray(sec.points) && sec.points.length) {
+          html += "<ul>" + sec.points.map((p: string) => `<li>${p}</li>`).join("") + "</ul>";
+        }
+      }
+    }
+    return html;
+  } catch {
+    return typeof json === "string" ? json : "";
+  }
+}
+
+function bodyHtmlToJson(html: string): string {
+  if (!html || !html.trim()) return "";
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  const nodes = Array.from(doc.body.childNodes);
+
+  let intro = "";
+  const sections: { heading: string; points: string[] }[] = [];
+  let current: { heading: string; points: string[] } | null = null;
+
+  for (const node of nodes) {
+    if (node.nodeType !== 1) continue;
+    const el = node as HTMLElement;
+    const tag = el.tagName.toLowerCase();
+    const text = el.textContent?.trim() || "";
+
+    if ((tag === "p" || tag === "div") && !current && !sections.length) {
+      intro = text;
+    } else if (tag === "h1" || tag === "h2" || tag === "h3") {
+      current = { heading: text, points: [] };
+      sections.push(current);
+    } else if ((tag === "ul" || tag === "ol") && current) {
+      const items = Array.from(el.querySelectorAll("li"));
+      current.points.push(...items.map((li) => li.textContent?.trim() || ""));
+    } else if ((tag === "ul" || tag === "ol") && !current) {
+      current = { heading: "", points: [] };
+      const items = Array.from(el.querySelectorAll("li"));
+      current.points.push(...items.map((li) => li.textContent?.trim() || ""));
+      sections.push(current);
+    } else if (tag === "p" && current) {
+      current.points.push(text);
+    }
+  }
+
+  return JSON.stringify({ intro, sections });
+}
 
 export default function AdminChaptersPage() {
   const [items, setItems] = useState<any[]>([]);
@@ -87,6 +143,9 @@ export default function AdminChaptersPage() {
       return;
     }
     const payload: Record<string, any> = { ...values, category_id: categoryId };
+    if (payload.body && typeof payload.body === "string" && payload.body.startsWith("<")) {
+      payload.body = bodyHtmlToJson(payload.body);
+    }
     if (editItem) {
       const res = await fetch(`/api/chapters/${editItem.slug}/`, {
         method: "PUT",
@@ -163,7 +222,7 @@ export default function AdminChaptersPage() {
         open={showAdd || editItem !== null}
         title={editItem ? "Edit Chapter" : "Add Chapter"}
         fields={FIELDS.map((f) => f.key === "category_id" ? { ...f, options: categories } : f)}
-        data={editItem ?? undefined}
+        data={editItem ? { ...editItem, body: bodyJsonToHtml(editItem.body) } : undefined}
         onSave={handleSave}
         onClose={() => { setShowAdd(false); setEditItem(null); }}
       />

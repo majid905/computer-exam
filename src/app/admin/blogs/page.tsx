@@ -10,7 +10,7 @@ const FIELDS: FieldDef[] = [
   { key: "title", label: "Title", required: true },
   { key: "slug", label: "Slug", required: true },
   { key: "short_description", label: "Short Description", type: "textarea" },
-  { key: "content", label: "Content", type: "textarea" },
+  { key: "content", label: "Content", type: "richtext" },
   { key: "status", label: "Status", type: "select", options: [{ value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }] },
 ];
 

@@ -37,7 +37,7 @@ export default async function FaqPage() {
               {faq.category}
             </p>
             <h2 className="text-lg font-bold text-[var(--color-ink)] mt-2">{faq.question}</h2>
-            <p className="mt-3 text-[var(--color-muted)]">{faq.answer}</p>
+            <div className="mt-3 text-[var(--color-muted)] prose prose-sm dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: faq.answer }} />
           </article>
         ))}
       </div>

@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import { useUserState } from "@/lib/storage";
 import { CHAPTER_EMOJI } from "@/lib/content";
 import { ProgressBar } from "@/components/ui/Progress";
@@ -27,7 +26,7 @@ export default function Dashboard() {
 }
 
 function DashboardInner() {
-  const router = useRouter();
+
   const [state, , hydrated] = useUserState();
   const { subscription } = useAuth();
   const [chapters, setChapters] = useState<Chapter[]>([]);
@@ -56,12 +55,6 @@ function DashboardInner() {
       });
   }, []);
 
-  useEffect(() => {
-    if (!hydrated) return;
-    if (!state.onboarding.completed) {
-      router.replace("/onboarding");
-    }
-  }, [hydrated, state.onboarding.completed, router]);
 
   const studyChapters = useMemo(
     () => chapters.filter((c) => c.slug !== "study" && c.slug !== "applying"),
@@ -125,8 +118,6 @@ function DashboardInner() {
       </div>
     );
   }
-  if (!state.onboarding.completed) return null;
-
   const daysLeft = state.onboarding.testDate
     ? daysUntil(state.onboarding.testDate)
     : null;
