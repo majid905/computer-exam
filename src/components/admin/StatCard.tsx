@@ -9,13 +9,14 @@ export function StatCard({
   title: string;
   value: string | number;
   icon: React.ReactNode;
-  color?: "brand" | "accent" | "success" | "danger";
+  color?: "brand" | "accent" | "success" | "danger" | "info";
 }) {
   const colorMap = {
     brand: "bg-[var(--color-brand-soft)] text-[var(--color-brand)]",
     accent: "bg-[var(--color-accent-soft)] text-[var(--color-accent)]",
     success: "bg-[var(--color-success-soft)] text-[var(--color-success)]",
     danger: "bg-[var(--color-danger-soft)] text-[var(--color-danger)]",
+    info: "bg-[var(--color-info-soft)] text-[var(--color-info)]",
   };
 
   return (
