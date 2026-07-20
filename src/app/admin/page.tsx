@@ -6,7 +6,7 @@ import { StatCard } from "@/components/admin/StatCard";
 import { DataTable } from "@/components/admin/DataTable";
 
 export default function AdminDashboardPage() {
-  const [stats, setStats] = useState({ users: 0, questions: 0, chapters: 0, mockTests: 0, contacts: 0 });
+  const [stats, setStats] = useState({ users: 0, questions: 0, chapters: 0, mockTests: 0, contacts: 0, dictionary: 0 });
   const [recentUsers, setRecentUsers] = useState<any[]>([]);
   const [recentContacts, setRecentContacts] = useState<any[]>([]);
   const [subStats, setSubStats] = useState({ today: 0, thisMonth: 0, allTime: 0 });
@@ -16,19 +16,21 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     async function load() {
       try {
-        const [uRes, qRes, cRes, mRes, coRes, subRes] = await Promise.all([
+        const [uRes, qRes, cRes, mRes, coRes, subRes, dRes] = await Promise.all([
           fetch("/api/users/"),
           fetch("/api/questions/"),
           fetch("/api/chapters/"),
           fetch("/api/mock-tests/"),
           fetch("/api/contact-messages/"),
           fetch("/api/admin/subscription-stats/"),
+          fetch("/api/dictionary/"),
         ]);
         const users = uRes.ok ? await uRes.json() : [];
         const questions = qRes.ok ? await qRes.json() : [];
         const chapters = cRes.ok ? await cRes.json() : [];
         const mockTests = mRes.ok ? await mRes.json() : [];
         const contacts = coRes.ok ? await coRes.json() : [];
+        const dictionary = dRes.ok ? await dRes.json() : [];
 
         setStats({
           users: Array.isArray(users) ? users.length : 0,
@@ -36,6 +38,7 @@ export default function AdminDashboardPage() {
           chapters: Array.isArray(chapters) ? chapters.length : 0,
           mockTests: Array.isArray(mockTests) ? mockTests.length : 0,
           contacts: Array.isArray(contacts) ? contacts.length : 0,
+          dictionary: Array.isArray(dictionary) ? dictionary.length : 0,
         });
         setRecentUsers(Array.isArray(users) ? users.slice(0, 5) : []);
         setRecentContacts(Array.isArray(contacts) ? contacts.slice(0, 5) : []);
@@ -71,7 +74,7 @@ export default function AdminDashboardPage() {
     <div className="space-y-6">
       <h1 className="text-2xl font-extrabold text-[var(--color-ink)]">Dashboard</h1>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <StatCard
           title="Total Users"
           value={stats.users}
@@ -109,6 +112,16 @@ export default function AdminDashboardPage() {
           icon={
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+            </svg>
+          }
+        />
+        <StatCard
+          title="Dictionary"
+          value={stats.dictionary}
+          color="info"
+          icon={
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
             </svg>
           }
         />

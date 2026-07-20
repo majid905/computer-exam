@@ -9,7 +9,7 @@ import type { FieldDef } from "@/components/admin/AddEditModal";
 const FIELDS: FieldDef[] = [
   { key: "name", label: "Name", required: true },
   { key: "designation", label: "Designation" },
-  { key: "review", label: "Review", type: "textarea", required: true },
+  { key: "review", label: "Review", type: "richtext", required: true },
   { key: "rating", label: "Rating", type: "number" },
   { key: "status", label: "Status", type: "select", options: [{ value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }] },
 ];

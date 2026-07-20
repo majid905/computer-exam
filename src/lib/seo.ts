@@ -20,7 +20,7 @@ export const OG_IMAGE = `${SITE_URL}/opengraph-image.png`;
 // Paths that should never be indexed (private app, auth, admin, API).
 export const DISALLOWED_PATHS = [
   "/app",
-  "/onboarding",
+
   "/settings",
   "/progress",
   "/mock-exam",

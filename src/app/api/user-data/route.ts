@@ -124,7 +124,7 @@ export async function GET() {
   // Build chapters progress
   const chaptersProgress: Record<string, any> = {};
 
-  // From user_progress table
+  // From user_progress table (reading progress only, not practice data)
   for (const p of progress) {
     const slug = chapterMap.get(p.chapter_id);
     if (!slug) continue;
@@ -132,8 +132,8 @@ export async function GET() {
       read: p.percentage >= 100 || p.completed_questions >= p.total_questions,
       lastRead: p.updated_at,
       practiceAttempts: 0,
-      practiceCorrect: p.completed_questions ?? 0,
-      practiceTotal: p.total_questions ?? 0,
+      practiceCorrect: 0,
+      practiceTotal: 0,
     };
   }
 

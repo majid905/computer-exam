@@ -8,7 +8,7 @@ import type { FieldDef } from "@/components/admin/AddEditModal";
 
 const FIELDS: FieldDef[] = [
   { key: "title", label: "Title", required: true },
-  { key: "description", label: "Description", type: "textarea" },
+  { key: "description", label: "Description", type: "richtext" },
   { key: "time_limit", label: "Time Limit (minutes)", type: "number" },
   { key: "total_marks", label: "Total Marks", type: "number" },
   { key: "pass_marks", label: "Pass Marks", type: "number" },

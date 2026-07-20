@@ -1138,7 +1138,7 @@ export async function getSubscribedUsers() {
        u.full_name,
        u.email,
        p.title as plan_title,
-       pm.amount,
+       COALESCE(pm.amount, p.discount_price_monthly) as amount,
        s.payment_status,
        s.status as subscription_status,
        s.start_date,
@@ -1147,7 +1147,8 @@ export async function getSubscribedUsers() {
      FROM subscriptions s
      JOIN users u ON s.user_id = u.id
      JOIN pricing_plans p ON s.pricing_plan_id = p.id
-     LEFT JOIN payments pm ON pm.user_id = u.id AND pm.subscription_id = s.id
+     LEFT JOIN payments pm ON pm.user_id = s.user_id AND pm.status = 'completed'
+       AND pm.created_at >= s.start_date
      WHERE s.payment_status = 'paid'
      ORDER BY s.created_at DESC`,
   );
@@ -2064,6 +2065,28 @@ export async function listDictionaryTerms() {
   );
 }
 
+export async function listDictionaryTermsPaginated(limit: number, offset: number) {
+  return query<DictionaryTerm>(
+    `SELECT id, title, slug, short_definition, access_level, seo_title, seo_description, status
+     FROM dictionary_terms WHERE status = 'active'
+     ORDER BY CASE access_level WHEN 'free' THEN 0 WHEN 'login' THEN 1 ELSE 2 END, title ASC
+     LIMIT ? OFFSET ?`,
+    [limit, offset],
+  );
+}
+
+export async function countDictionaryTerms() {
+  const rows = await query<{ total: number; free: number; login: number; pro: number }>(
+    `SELECT
+       COUNT(*) AS total,
+       SUM(CASE WHEN access_level = 'free' THEN 1 ELSE 0 END) AS free,
+       SUM(CASE WHEN access_level = 'login' THEN 1 ELSE 0 END) AS login,
+       SUM(CASE WHEN access_level = 'pro' THEN 1 ELSE 0 END) AS pro
+     FROM dictionary_terms WHERE status = 'active'`,
+  );
+  return rows[0] ?? { total: 0, free: 0, login: 0, pro: 0 };
+}
+
 export async function getDictionaryTermBySlug(slug: string) {
   const rows = await query<DictionaryTerm>(
     `SELECT * FROM dictionary_terms WHERE slug = ? AND status = 'active' LIMIT 1`,
@@ -2128,4 +2151,97 @@ export async function hasActiveSubscription(userId: number): Promise<boolean> {
     [userId],
   );
   return rows.length > 0;
+}
+
+// ===================== CHAT =====================
+
+export type ChatMessage = {
+  id: number;
+  sender_id: number;
+  receiver_id: number;
+  message: string;
+  is_read: number;
+  created_at: string;
+  updated_at: string;
+  sender_name?: string;
+  sender_role?: string;
+  receiver_name?: string;
+};
+
+export async function sendChatMessage(senderId: number, receiverId: number, message: string) {
+  return execute(
+    `INSERT INTO chat_messages (sender_id, receiver_id, message) VALUES (?, ?, ?)`,
+    [senderId, receiverId, message],
+  );
+}
+
+export async function getChatMessages(userA: number, userB: number, limit = 50, offset = 0) {
+  return query<ChatMessage>(
+    `SELECT m.*, s.full_name AS sender_name, s.role AS sender_role, r.full_name AS receiver_name
+     FROM chat_messages m
+     JOIN users s ON s.id = m.sender_id
+     JOIN users r ON r.id = m.receiver_id
+     WHERE (m.sender_id = ? AND m.receiver_id = ?)
+        OR (m.sender_id = ? AND m.receiver_id = ?)
+     ORDER BY m.created_at ASC
+     LIMIT ? OFFSET ?`,
+    [userA, userB, userB, userA, limit, offset],
+  );
+}
+
+export async function markMessagesRead(receiverId: number, senderId: number) {
+  return execute(
+    `UPDATE chat_messages SET is_read = 1, updated_at = datetime('now')
+     WHERE receiver_id = ? AND sender_id = ? AND is_read = 0`,
+    [receiverId, senderId],
+  );
+}
+
+export async function getUnreadChatCount(userId: number) {
+  const rows = await query<{ count: number }>(
+    `SELECT COUNT(*) AS count FROM chat_messages WHERE receiver_id = ? AND is_read = 0`,
+    [userId],
+  );
+  return rows[0]?.count ?? 0;
+}
+
+export async function getChatConversations(adminId: number) {
+  return query<{
+    user_id: number;
+    full_name: string;
+    email: string;
+    profile_pic: string | null;
+    last_message: string;
+    last_message_at: string;
+    unread_count: number;
+  }>(
+    `SELECT
+       u.id AS user_id, u.full_name, u.email, u.profile_pic,
+       latest.message AS last_message,
+       latest.created_at AS last_message_at,
+       COALESCE(unread.cnt, 0) AS unread_count
+     FROM users u
+     INNER JOIN (
+       SELECT
+         CASE WHEN sender_id = ? THEN receiver_id ELSE sender_id END AS other_id,
+         MAX(id) AS max_id
+       FROM chat_messages
+       WHERE sender_id = ? OR receiver_id = ?
+       GROUP BY other_id
+     ) conv ON conv.other_id = u.id
+     INNER JOIN chat_messages latest ON latest.id = conv.max_id
+     LEFT JOIN (
+       SELECT sender_id, COUNT(*) AS cnt
+       FROM chat_messages
+       WHERE receiver_id = ? AND is_read = 0
+       GROUP BY sender_id
+     ) unread ON unread.sender_id = u.id
+     ORDER BY latest.created_at DESC`,
+    [adminId, adminId, adminId, adminId],
+  );
+}
+
+export async function getAdminUser() {
+  const rows = await query<User>(`SELECT * FROM users WHERE role = 'admin' AND status = 'active' LIMIT 1`);
+  return rows[0] || null;
 }

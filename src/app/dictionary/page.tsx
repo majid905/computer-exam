@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { listDictionaryTerms } from "@/lib/backend";
+import { listDictionaryTermsPaginated, countDictionaryTerms } from "@/lib/backend";
 import { getAuthUser } from "@/lib/auth";
 
 export const metadata: Metadata = {
@@ -22,23 +22,33 @@ const ACCESS_BADGE: Record<string, { label: string; cls: string }> = {
   pro:   { label: "Pro",   cls: "bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300" },
 };
 
-export default async function DictionaryPage() {
-  let terms: Awaited<ReturnType<typeof listDictionaryTerms>> = [];
+const PER_PAGE = 24;
+
+export default async function DictionaryPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const params = await searchParams;
+  const page = Math.max(1, Number(params.page) || 1);
+  const offset = (page - 1) * PER_PAGE;
+
+  let terms: Awaited<ReturnType<typeof listDictionaryTermsPaginated>> = [];
+  let counts = { total: 0, free: 0, login: 0, pro: 0 };
   try {
-    terms = await listDictionaryTerms();
-  } catch {
-    // table may not exist yet in dev
-  }
+    [terms, counts] = await Promise.all([
+      listDictionaryTermsPaginated(PER_PAGE, offset),
+      countDictionaryTerms(),
+    ]);
+  } catch {}
+
+  const totalPages = Math.max(1, Math.ceil(counts.total / PER_PAGE));
 
   let isLoggedIn = false;
   try {
     const auth = await getAuthUser();
     isLoggedIn = !!auth;
   } catch {}
-
-  const freeCount  = terms.filter((t) => t.access_level === "free").length;
-  const loginCount = terms.filter((t) => t.access_level === "login").length;
-  const proCount   = terms.filter((t) => t.access_level === "pro").length;
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
@@ -48,18 +58,18 @@ export default async function DictionaryPage() {
           Canadian Citizenship Glossary
         </h1>
         <p className="mx-auto max-w-2xl text-gray-600 dark:text-gray-400">
-          {terms.length}+ key terms you need to know for the Canadian citizenship test — from
+          {counts.total}+ key terms you need to know for the Canadian citizenship test — from
           government and history to immigration and rights.
         </p>
         <div className="mt-4 flex flex-wrap justify-center gap-3 text-sm">
           <span className="rounded-full bg-green-100 px-3 py-1 text-green-800 dark:bg-green-900/40 dark:text-green-300">
-            {freeCount} Free terms
+            {counts.free} Free terms
           </span>
           <span className="rounded-full bg-blue-100 px-3 py-1 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">
-            {loginCount} more with free account
+            {counts.login} more with free account
           </span>
           <span className="rounded-full bg-purple-100 px-3 py-1 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300">
-            {proCount} more with Pro
+            {counts.pro} more with Pro
           </span>
         </div>
       </div>
@@ -97,6 +107,61 @@ export default async function DictionaryPage() {
             );
           })}
         </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <nav className="mt-10 flex items-center justify-center gap-2" aria-label="Pagination">
+          {page > 1 && (
+            <Link
+              href={`/dictionary?page=${page - 1}`}
+              className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+            >
+              Previous
+            </Link>
+          )}
+
+          {Array.from({ length: totalPages }, (_, i) => i + 1)
+            .filter((p) => p === 1 || p === totalPages || Math.abs(p - page) <= 2)
+            .reduce<(number | "dots")[]>((acc, p, i, arr) => {
+              if (i > 0 && p - (arr[i - 1] as number) > 1) acc.push("dots");
+              acc.push(p);
+              return acc;
+            }, [])
+            .map((item, i) =>
+              item === "dots" ? (
+                <span key={`dots-${i}`} className="px-2 text-gray-400">…</span>
+              ) : (
+                <Link
+                  key={item}
+                  href={`/dictionary?page=${item}`}
+                  className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                    item === page
+                      ? "bg-[var(--color-brand)] text-white"
+                      : "border border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+                  }`}
+                >
+                  {item}
+                </Link>
+              ),
+            )}
+
+          {page < totalPages && (
+            <Link
+              href={`/dictionary?page=${page + 1}`}
+              className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+            >
+              Next
+            </Link>
+          )}
+        </nav>
+      )}
+
+      {/* Page info */}
+      {totalPages > 1 && (
+        <p className="mt-3 text-center text-xs text-gray-500 dark:text-gray-400">
+          Showing {offset + 1}–{Math.min(offset + PER_PAGE, counts.total)} of {counts.total} terms
+        </p>
       )}
 
       {/* CTA — only for logged-out users */}

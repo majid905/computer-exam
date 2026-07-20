@@ -8,5 +8,6 @@ export const NAV_TOPICS = [
 ];
 
 export const NAV_SECONDARY = [
+  { href: "/contact", label: "Contact" },
   { href: "/settings", label: "Settings" },
 ];

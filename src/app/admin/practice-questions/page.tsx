@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { DataTable } from "@/components/admin/DataTable";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
+import { RichTextEditor } from "@/components/admin/RichTextEditor";
 
 const DIFFICULTIES = [
   { value: "easy", label: "Easy" },
@@ -262,12 +263,9 @@ export default function AdminPracticeQuestionsPage() {
                 <label className="block text-xs font-bold uppercase tracking-wider text-[var(--color-muted)] mb-1">
                   Question <span className="text-[var(--color-danger)]">*</span>
                 </label>
-                <textarea
+                <RichTextEditor
                   value={form.question}
-                  onChange={(e) => setForm((f) => ({ ...f, question: e.target.value }))}
-                  rows={3}
-                  required
-                  className="w-full rounded-md border-2 border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-ink)] focus:outline-none focus:border-[var(--color-brand)]"
+                  onChange={(html) => setForm((f) => ({ ...f, question: html }))}
                 />
               </div>
 
@@ -306,11 +304,9 @@ export default function AdminPracticeQuestionsPage() {
                 <label className="block text-xs font-bold uppercase tracking-wider text-[var(--color-muted)] mb-1">
                   Explanation
                 </label>
-                <textarea
+                <RichTextEditor
                   value={form.explanation}
-                  onChange={(e) => setForm((f) => ({ ...f, explanation: e.target.value }))}
-                  rows={3}
-                  className="w-full rounded-md border-2 border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-ink)] focus:outline-none focus:border-[var(--color-brand)]"
+                  onChange={(html) => setForm((f) => ({ ...f, explanation: html }))}
                 />
               </div>
 

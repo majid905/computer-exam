@@ -12,7 +12,7 @@ const initialState: UserState = {
     testDate: null,
     baselineScore: null,
     baselineCompletedAt: null,
-    completed: false,
+    completed: true,
   },
   theme: "system",
   chapters: {},

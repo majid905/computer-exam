@@ -48,7 +48,7 @@ export default function PricingPage() {
             <div className="flex items-center justify-between gap-4">
               <div>
                 <h2 className="text-xl font-bold text-[var(--color-ink)]">{plan.title}</h2>
-                <p className="text-sm text-[var(--color-muted)] mt-1">{plan.description}</p>
+                <div className="text-sm text-[var(--color-muted)] mt-1" dangerouslySetInnerHTML={{ __html: plan.description }} />
               </div>
               <div className="text-right">
                 <div className="text-3xl font-extrabold text-[var(--color-brand)]">

@@ -7,6 +7,7 @@ import { useUserState } from "@/lib/storage";
 import { useAuth } from "@/context/AuthContext";
 import { NAV_TOPICS, NAV_SECONDARY } from "@/lib/nav";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
+import { ChatWidget } from "@/components/chat/ChatWidget";
 import { useSessionTimeout } from "@/hooks/useSessionTimeout";
 
 const PUBLIC_NAV = [
@@ -57,7 +58,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const hideNav =
     pathname === "/" ||
     pathname === "" ||
-    pathname?.startsWith("/onboarding") ||
+
     pathname?.startsWith("/mock-exam/take") ||
     pathname?.startsWith("/welcome") ||
     pathname?.startsWith("/login") ||
@@ -246,6 +247,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </header>
       )}
       <main className="flex-1 w-full">{children}</main>
+      {user && <ChatWidget />}
       {!hideNav && (
         <footer className="border-t mt-12 py-6 text-sm text-[var(--color-muted)]">
           <div className="mx-auto max-w-6xl px-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
