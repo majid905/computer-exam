@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 const ICONS: Record<string, string> = {
   chat: "M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z",
@@ -130,6 +131,10 @@ export function AdminSidebar() {
       </nav>
 
       <div className="p-3 border-t space-y-1">
+        <div className={`flex items-center ${collapsed ? "justify-center" : "justify-between px-2.5"}`}>
+          {!collapsed && <span className="text-sm font-medium text-[var(--color-muted)]">Theme</span>}
+          <ThemeToggle />
+        </div>
         <Link
           href="/app"
           className={`flex items-center gap-3 px-2.5 py-2 rounded-lg text-sm font-medium text-[var(--color-muted)] hover:bg-[var(--color-surface-2)] hover:text-[var(--color-ink)] transition-colors ${

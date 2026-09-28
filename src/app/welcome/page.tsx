@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 function Logo({ size = 28 }: { size?: number }) {
   return (
@@ -81,6 +82,7 @@ function MarketingNav() {
           </a>
         </nav>
         <div className="flex items-center gap-2">
+          <ThemeToggle />
           <Link
             href="/app"
             className="hidden sm:inline-flex ud-btn ud-btn-ghost ud-btn-sm"

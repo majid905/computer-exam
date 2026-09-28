@@ -9,6 +9,7 @@ import { NAV_TOPICS, NAV_SECONDARY } from "@/lib/nav";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { ChatWidget } from "@/components/chat/ChatWidget";
 import { useSessionTimeout } from "@/hooks/useSessionTimeout";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 const PUBLIC_NAV = [
   { href: "/dictionary", label: "Glossary" },
@@ -160,6 +161,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   🔥 {state.streak.current}-day
                 </span>
               )}
+              <ThemeToggle />
               {!loading && user && <NotificationBell />}
               {!loading && user ? (
                 <div className="flex items-center gap-2">
